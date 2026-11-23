@@ -1,0 +1,25 @@
+{
+ "v": 1,
+ "kdf": {
+  "name": "PBKDF2-SHA256",
+  "iter": 310000,
+  "salt": "dK9BZcvn+XIRjjoKTTp4OA=="
+ },
+ "check": {
+  "iv": "6bXFaIGUQCkmDWPX",
+  "ct": "VFPgsj30OK/FpMc1ZYWi/PMhmswlCzKGe7D2EUA6iN22"
+ },
+ "files": [
+  {
+   "id": "physics-13-notes",
+   "subject": "Physics",
+   "ch": 13,
+   "chapter": "Nuclei",
+   "kind": "notes",
+   "iv": "RonKSGqtcOqoCMGo",
+   "size": 602,
+   "hash": "c7420ce7ea30f036dca076bb8e16005d4a63d83f0202697e05f361fd467a373d"
+  }
+ ],
+ "updated": 1795464026830
+}

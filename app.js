@@ -48,12 +48,13 @@
   function show(t) {
     tab = t;
     document.querySelectorAll('.tab').forEach(b => { if (b.dataset.tab === t) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
-    for (const v of ['today', 'focus', 'syllabus', 'quiz']) $('v-' + v).hidden = v !== t;
+    for (const v of ['today', 'focus', 'syllabus', 'quiz', 'library']) $('v-' + v).hidden = v !== t;
+    if (t === 'library') { if (lib.status === 'idle') loadLibrary(); else if (lib.status === 'ready') refreshManifest(); }
     render(); scrollTo(0, 0);
   }
   document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => show(b.dataset.tab)));
   function render() {
-    if (tab === 'today') renderToday(); else if (tab === 'focus') renderFocus(); else if (tab === 'syllabus') renderSyllabus(); else renderQuiz();
+    if (tab === 'today') renderToday(); else if (tab === 'focus') renderFocus(); else if (tab === 'syllabus') renderSyllabus(); else if (tab === 'library') renderLibrary(); else renderQuiz();
     renderOverlay();
   }
 
@@ -362,6 +363,118 @@
       if (mCount) v.append(h('button', { class: 'btn danger', onclick: () => startQuiz('mistakes') }, 'Retry my mistakes (' + mCount + ')'));
       v.append(h('div', { class: 'row2' }, h('button', { class: 'btn', onclick: () => { quiz.mode = 'pick'; render(); } }, 'Pick chapter'), h('button', { class: 'btn primary', onclick: () => startQuiz('quick') }, 'Another 10')));
     }
+  }
+
+  /* ================= LIBRARY =================
+     Files on GitHub are scrambled (AES-GCM, key from the library code via PBKDF2).
+     After the code is entered once, every file is unscrambled and kept on this device (IndexedDB), so it works offline. */
+  const KINDS = { notes: 'Notes', revision: 'Revision notes', worksheet: 'Worksheet' };
+  const KINDS_FOR = s => s === 'Maths' ? ['revision', 'worksheet'] : ['notes', 'revision', 'worksheet'];
+  const idb = (() => {
+    let dbp;
+    const open = () => dbp || (dbp = new Promise((res, rej) => { const r = indexedDB.open('exam-pass-library', 1); r.onupgradeneeded = () => { r.result.createObjectStore('files'); r.result.createObjectStore('meta'); }; r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }));
+    const op = async (store, mode, fn) => { const d = await open(); return new Promise((res, rej) => { const tx = d.transaction(store, mode); const rq = fn(tx.objectStore(store)); tx.oncomplete = () => res(rq ? rq.result : undefined); tx.onerror = () => rej(tx.error); tx.onabort = () => rej(tx.error); }); };
+    return { get: (s, k) => op(s, 'readonly', o => o.get(k)), put: (s, k, v) => op(s, 'readwrite', o => o.put(v, k)), del: (s, k) => op(s, 'readwrite', o => o.delete(k)), all: s => op(s, 'readonly', o => o.getAllKeys()) };
+  })();
+  const b64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+  let lib = { status: 'idle', manifest: null, key: null, have: {}, subject: 'Physics', err: '', sync: null, offline: false };
+  async function loadLibrary() {
+    lib.status = 'loading'; render();
+    let m = null;
+    try { const r = await fetch('library/manifest.json', { cache: 'no-cache' }); if (!r.ok) throw 0; m = await r.json(); await idb.put('meta', 'manifest', m); lib.offline = false; }
+    catch (e) { try { m = await idb.get('meta', 'manifest'); } catch (x) {} lib.offline = true; }
+    if (!m || !m.kdf) { lib.status = 'error'; lib.err = "Couldn't load the library. Connect to the internet once, then try again."; render(); return; }
+    lib.manifest = m;
+    let key = null, salt = null; try { key = await idb.get('meta', 'key'); salt = await idb.get('meta', 'salt'); } catch (e) {}
+    if (!key || salt !== m.kdf.salt) { lib.status = 'locked'; render(); return; }
+    lib.key = key; lib.status = 'ready'; await refreshHave(); render(); syncFiles();
+  }
+  // Quietly pick up files added since last time.
+  async function refreshManifest() {
+    try {
+      const r = await fetch('library/manifest.json', { cache: 'no-cache' }); if (!r.ok) return; const m = await r.json();
+      if (JSON.stringify(m) === JSON.stringify(lib.manifest)) { syncFiles(); return; }
+      await idb.put('meta', 'manifest', m); lib.manifest = m;
+      if (m.kdf.salt !== (await idb.get('meta', 'salt'))) { lib.status = 'locked'; lib.key = null; render(); return; }
+      render(); syncFiles();
+    } catch (e) {}
+  }
+  async function refreshHave() { lib.have = {}; try { for (const id of await idb.all('files')) { const f = await idb.get('files', id); if (f) lib.have[id] = f.iv; } } catch (e) {} }
+  async function unlockLibrary(code, errEl, btn) {
+    const m = lib.manifest; btn.disabled = true; btn.textContent = 'Unlocking…';
+    try {
+      const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(code), 'PBKDF2', false, ['deriveKey']);
+      const key = await crypto.subtle.deriveKey({ name: 'PBKDF2', salt: b64(m.kdf.salt), iterations: m.kdf.iter, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
+      const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64(m.check.iv) }, key, b64(m.check.ct));
+      if (new TextDecoder().decode(pt) !== 'exam-pass-library') throw 0;
+      await idb.put('meta', 'key', key); await idb.put('meta', 'salt', m.kdf.salt);
+      lib.key = key; lib.status = 'ready'; await refreshHave(); render(); toast('Library unlocked on this device'); syncFiles();
+    } catch (e) { errEl.textContent = "That's not the library code."; btn.disabled = false; btn.textContent = 'Unlock library'; }
+  }
+  // Download and unscramble every file this device doesn't have yet (or that changed), and drop removed ones.
+  async function syncFiles() {
+    if (lib.sync || !lib.key || !lib.manifest) return;
+    const files = lib.manifest.files || [], want = new Set(files.map(f => f.id));
+    for (const id of Object.keys(lib.have)) if (!want.has(id)) { try { await idb.del('files', id); } catch (e) {} delete lib.have[id]; }
+    const todo = files.filter(f => lib.have[f.id] !== f.iv);
+    if (!todo.length) { render(); return; }
+    lib.sync = { done: 0, total: todo.length, failed: 0 }; render();
+    for (const f of todo) {
+      try {
+        const r = await fetch('library/files/' + f.id + '.bin', { cache: 'no-cache' }); if (!r.ok) throw 0;
+        const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64(f.iv) }, lib.key, await r.arrayBuffer());
+        await idb.put('files', f.id, { iv: f.iv, blob: new Blob([pt], { type: 'application/pdf' }), size: pt.byteLength });
+        lib.have[f.id] = f.iv;
+      } catch (e) { lib.sync.failed++; }
+      lib.sync.done++; if (tab === 'library') render();
+    }
+    const failed = lib.sync.failed; lib.sync = null; render();
+    if (failed) toast(failed + (failed === 1 ? " file couldn't" : " files couldn't") + ' be saved. Open the Library online to retry.');
+  }
+  async function openFile(f, save) {
+    let rec = null; try { rec = await idb.get('files', f.id); } catch (e) {}
+    if (!rec || rec.iv !== f.iv) { toast('Still saving this file. Try again in a moment.'); syncFiles(); return; }
+    const url = URL.createObjectURL(rec.blob);
+    const a = h('a', { href: url, target: '_blank', rel: 'noopener' });
+    if (save) a.setAttribute('download', (f.subject + ' Ch' + f.ch + ' ' + (f.chapter || '') + ' - ' + KINDS[f.kind]).replace(/[\\/:*?"<>|]+/g, '') + '.pdf');
+    document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 60000);
+  }
+  const mb = n => n >= 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB';
+  function renderLibrary() {
+    const v = $('v-library'); v.replaceChildren();
+    v.append(h('div', { class: 'head' }, h('div', null, h('div', { class: 'mono' }, 'Library'), h('div', { class: 'date-big poster' }, 'Notes & sheets'))));
+    if (lib.status === 'idle' || lib.status === 'loading') { v.append(h('div', { class: 'empty' }, 'Opening the library…')); return; }
+    if (lib.status === 'error') { v.append(h('div', { class: 'empty' }, lib.err), h('button', { class: 'btn', onclick: loadLibrary }, 'Try again')); return; }
+    if (lib.status === 'locked') {
+      const inp = h('input', { type: 'password', inputmode: 'numeric', autocomplete: 'off', 'aria-label': 'Library code', maxlength: '32' }), err = h('div', { class: 'err', role: 'alert' });
+      const btn = h('button', { class: 'btn primary', type: 'submit' }, 'Unlock library');
+      v.append(h('form', { class: 'lockcard', onsubmit: e => { e.preventDefault(); if (!inp.value) { err.textContent = 'Type the library code.'; return; } unlockLibrary(inp.value, err, btn); } },
+        h('div', { class: 'poster', style: 'font-size:26px' }, 'LOCKED'),
+        h('div', null, 'Your notes and worksheets are private. Enter the library code once and everything is saved on this phone, so you can read it offline.'),
+        inp, err, btn));
+      if (lib.offline) v.append(h('div', { class: 'yday' }, 'You seem to be offline. Connect once to unlock and save the files.'));
+      setTimeout(() => inp.focus(), 50);
+      return;
+    }
+    const files = (lib.manifest.files || []);
+    v.append(h('div', { class: 'seg', role: 'group', 'aria-label': 'Subject' }, ['Physics', 'Chemistry', 'Maths'].map(s => h('button', { 'aria-pressed': String(lib.subject === s), onclick: () => { lib.subject = s; render(); } }, s.toUpperCase()))));
+    const saved = files.filter(f => lib.have[f.id] === f.iv).length;
+    if (lib.sync) v.append(h('div', { class: 'libnote' }, 'Saving ' + lib.sync.done + ' of ' + lib.sync.total + '…', h('span', { class: 'meter' }, h('div', { style: 'width:' + Math.round(lib.sync.done / lib.sync.total * 100) + '%' }))));
+    else v.append(h('div', { class: 'libnote' }, files.length ? (saved === files.length ? '✓ All ' + files.length + ' files saved on this phone' : saved + ' of ' + files.length + ' saved · open online to finish') : 'No files added yet. They will appear here.'));
+    const group = L.SYLLABUS.find(g => g.subject === lib.subject), kinds = KINDS_FOR(lib.subject);
+    group.chapters.forEach((name, i) => {
+      const ch = i + 1;
+      v.append(h('div', { class: 'libchap' },
+        h('div', { class: 'nm' }, h('span', { class: 'cn' }, 'CH ' + ch), name),
+        h('div', { class: 'kinds' }, kinds.map(k => {
+          const f = files.find(x => x.subject === lib.subject && x.ch === ch && x.kind === k);
+          if (!f) return h('div', { class: 'kbtn missing' }, h('span', { class: 'k1' }, KINDS[k]), h('span', { class: 'k2' }, 'NOT ADDED YET'));
+          const ready = lib.have[f.id] === f.iv;
+          return h('button', { class: 'kbtn' + (ready ? '' : ' wait'), onclick: () => openFile(Object.assign({ chapter: name }, f)), oncontextmenu: e => { e.preventDefault(); openFile(Object.assign({ chapter: name }, f), true); } },
+            h('span', { class: 'k1' }, KINDS[k]), h('span', { class: 'k2' }, (ready ? '✓ OFFLINE · ' : 'SAVING · ') + mb(f.size)));
+        }))));
+    });
+    if (files.length) v.append(h('div', { class: 'yday' }, 'Tap to open. From the PDF viewer you can share or save a copy.'));
   }
 
   /* ================= SHEETS & SETTINGS ================= */

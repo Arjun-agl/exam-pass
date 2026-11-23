@@ -1,5 +1,5 @@
 // Makes the app work offline after the first visit. Your data stays in this device's storage.
-const CACHE = 'exam-pass-v5';
+const CACHE = 'exam-pass-v6';
 const SHELL = ['./', './index.html', './app.js', './logic.js', './questions.js', './manifest.json', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
@@ -17,6 +17,7 @@ self.addEventListener('fetch', e => {
   const isShell = url.origin === location.origin;
   const isFont = url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com';
   if (!isShell && !isFont) return;
+  if (url.pathname.includes('/library/files/')) return; // scrambled files: the app saves the unscrambled copy itself
   e.respondWith((async () => {
     const cache = await caches.open(CACHE);
     if (isFont) { const hit = await cache.match(req); if (hit) return hit; }
