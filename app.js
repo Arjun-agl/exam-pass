@@ -28,7 +28,7 @@
 
   /* ---------- Storage ---------- */
   const KEY = 'exam-pass-v1';
-  function read() { try { const s = JSON.parse(localStorage.getItem(KEY)); return L.validState(s) ? s : null; } catch (e) { return null; } }
+  function read() { try { const s = JSON.parse(localStorage.getItem(KEY)); if (!L.validState(s)) return null; if (L.migrate(s)) localStorage.setItem(KEY, JSON.stringify(s)); return s; } catch (e) { return null; } }
   let state = read() || L.defaultState();
   if (!state.prefs) state.prefs = { focus: 25, brk: 5 };
   // Every change: pick up anything another window saved, apply the change, save, redraw.
@@ -389,7 +389,7 @@
     } }, 'Reset everything');
     const fileIn = h('input', { type: 'file', accept: 'application/json,.json', style: 'display:none', onchange: async ev => {
       const f = ev.target.files && ev.target.files[0]; if (!f) return;
-      try { const data = JSON.parse(await f.text()); if (!L.validState(data)) throw 0; importArmed = data; importBtn.textContent = 'Tap again to replace all data with this backup'; importBtn.classList.add('armed'); importBtn.classList.add('danger'); }
+      try { const data = JSON.parse(await f.text()); if (!L.validState(data)) throw 0; L.migrate(data); importArmed = data; importBtn.textContent = 'Tap again to replace all data with this backup'; importBtn.classList.add('armed'); importBtn.classList.add('danger'); }
       catch (e) { err.textContent = "That file isn't an Exam Pass backup."; }
       ev.target.value = '';
     } });

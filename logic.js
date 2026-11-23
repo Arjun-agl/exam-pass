@@ -95,7 +95,7 @@
 
   /* ---------- Syllabus ---------- */
   const SYLLABUS = [
-    { subject: 'Physics', chapters: ['Electric Charges and Fields', 'Electrostatic Potential and Capacitance', 'Current Electricity', 'Moving Charges and Magnetism', 'Magnetism and Matter', 'Electromagnetic Induction', 'Alternating Current', 'Electromagnetic Waves', 'Ray Optics', 'Wave Optics', 'Dual Nature', 'Atoms', 'Nuclei', 'Semiconductors'] },
+    { subject: 'Physics', chapters: ['Electric Charges and Fields', 'Electrostatic Potential', 'Capacitance', 'Current Electricity', 'Moving Charges and Magnetism', 'Magnetism and Matter', 'Electromagnetic Induction', 'Alternating Current', 'Electromagnetic Waves', 'Ray Optics', 'Wave Optics', 'Dual Nature', 'Atoms', 'Nuclei', 'Semiconductors'] },
     { subject: 'Chemistry', chapters: ['Solutions', 'Electrochemistry', 'Chemical Kinetics', 'd and f Block', 'Coordination Compounds', 'Haloalkanes and Haloarenes', 'Alcohols, Phenols and Ethers', 'Aldehydes, Ketones and Carboxylic Acids', 'Amines', 'Biomolecules'] },
     { subject: 'Maths', chapters: ['Relations and Functions', 'Inverse Trigonometric Functions', 'Matrices', 'Determinants', 'Continuity and Differentiability', 'Application of Derivatives', 'Integrals', 'Application of Integrals', 'Differential Equations', 'Vectors', '3D Geometry', 'Linear Programming', 'Probability'] }
   ];
@@ -104,7 +104,7 @@
     const s = {}; const set = (subj, name, l, n, r) => { s[chapId(subj, name)] = { l: !!l, n: !!n, r: !!r, note: '' }; };
     SYLLABUS.forEach(g => g.chapters.forEach(c => set(g.subject, c, 0, 0, 0)));
     const P = SYLLABUS[0].chapters, C = SYLLABUS[1].chapters, M = SYLLABUS[2].chapters;
-    P.slice(0, 10).forEach(c => set('Physics', c, 1, 1, 0));
+    P.slice(0, 11).forEach(c => set('Physics', c, 1, 1, 0)); // NCERT Ch 1-10 (Ch 2 is split into two here)
     ['Moving Charges and Magnetism', 'Magnetism and Matter', 'Electromagnetic Induction', 'Ray Optics', 'Wave Optics'].forEach(c => set('Physics', c, 1, 1, 1));
     set('Physics', 'Atoms', 1, 0, 0);
     ['Solutions', 'Electrochemistry', 'Chemical Kinetics'].forEach(c => set('Chemistry', c, 1, 1, 0));
@@ -132,6 +132,17 @@
   function defaultState() {
     return { v: 1, events: defaultEvents(), days: {}, sessions: [], syllabus: defaultSyllabus(), quiz: { mistakes: {} }, timer: null, prefs: { focus: 25, brk: 5 }, updated: 0 };
   }
+  // Older saves had "Electrostatic Potential and Capacitance" as one chapter: copy its ticks and note to both new chapters.
+  function migrate(s) {
+    const old = 'physics:electrostatic-potential-and-capacitance';
+    if (s && s.syllabus && s.syllabus[old]) {
+      const e = s.syllabus[old];
+      for (const id of ['physics:electrostatic-potential', 'physics:capacitance']) if (!s.syllabus[id]) s.syllabus[id] = { l: !!e.l, n: !!e.n, r: !!e.r, note: e.note || '' };
+      delete s.syllabus[old];
+      return true;
+    }
+    return false;
+  }
   function validState(s) { return s && typeof s === 'object' && Array.isArray(s.events) && s.days && typeof s.days === 'object' && Array.isArray(s.sessions) && s.syllabus && s.quiz; }
 
   /* ---------- Quiz ---------- */
@@ -145,6 +156,6 @@
 
   const api = { TZ, istDate, addDays, diffDays, pretty, short, dow, uid, PLAN, planFor, dayTasks, ensureDay, sortTasks, toggleTask, addTask, deleteTask,
     hasNsatDone, streak, unfinishedBefore, carryOver, dayCounts, minutesOn, lastNDays, hm, nextEvents,
-    SYLLABUS, chapId, defaultSyllabus, chapTicks, subjectProgress, defaultEvents, defaultState, validState, qid, recordAnswer, shuffle };
+    SYLLABUS, chapId, defaultSyllabus, chapTicks, subjectProgress, defaultEvents, defaultState, validState, migrate, qid, recordAnswer, shuffle };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.Logic = api;
 })(typeof window !== 'undefined' ? window : globalThis);
