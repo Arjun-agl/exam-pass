@@ -137,13 +137,13 @@
     card.addEventListener('contextmenu', e => e.preventDefault());
     const guard = fn => () => { if (longPressed) { longPressed = false; return; } fn(); };
     const sub = t.carried ? 'carried over from ' + L.short(t.from) : '';
-    card.append(
+    card.append(...[
       h('button', { class: 'check', 'aria-label': (t.done ? 'Un-tick ' : 'Tick ') + t.text, 'aria-pressed': String(!!t.done), onclick: guard(toggle) }, t.done ? '✓' : ''),
       h('button', { class: 'txt', onclick: guard(toggle) }, t.text, sub ? h('span', { class: 'sub' }, sub) : null),
       t.done ? h('span', { class: 'stamp' }, 'DONE') : t.must ? h('span', { class: 'tag-must' }, 'MUST-DO') : null,
       armed === t.id
         ? h('button', { class: 'x armed', onclick: () => { armed = null; commit(s => L.deleteTask(s, viewDate, t.id)); toast('Task deleted'); } }, 'DELETE')
-        : h('button', { class: 'x', 'aria-label': 'Delete ' + t.text, onclick: () => arm(t.id) }, '×'));
+        : h('button', { class: 'x', 'aria-label': 'Delete ' + t.text, onclick: () => arm(t.id) }, '×')].filter(Boolean));
     return card;
   }
 
@@ -347,9 +347,9 @@
         q.options.map((op, k) => h('button', { class: 'opt' + (answered && k === q.answer ? ' right' : '') + (answered && k === quiz.picked && k !== q.answer ? ' wrong' : ''), disabled: answered,
           onclick: () => { quiz.picked = k; if (k === q.answer) quiz.score++; commit(s => L.recordAnswer(s, L.qid(q), k === q.answer)); } },
           h('span', { class: 'k' }, 'ABCD'[k]), h('span', null, op))));
-      if (answered) card.append(h('div', { class: 'verdict', style: 'color:' + (right ? 'var(--done)' : 'var(--warn)') }, right ? 'RIGHT!' : 'NOT QUITE'),
+      if (answered) card.append(...[h('div', { class: 'verdict', style: 'color:' + (right ? 'var(--done)' : 'var(--warn)') }, right ? 'RIGHT!' : 'NOT QUITE'),
         right ? null : h('div', { class: 'explain' }, 'Correct: ' + 'ABCD'[q.answer] + '. ' + q.options[q.answer]),
-        h('div', { class: 'explain', style: 'color:var(--mut)' }, q.explain || ''));
+        h('div', { class: 'explain', style: 'color:var(--mut)' }, q.explain || '')].filter(Boolean));
       v.append(h('div', { class: 'head' }, h('div', null, h('div', { class: 'mono' }, 'Score ' + quiz.score), h('div', { class: 'date-big poster' }, quiz.kind === 'mistakes' ? 'Fix mistakes' : 'Quick 10')),
         h('button', { class: 'addbtn', onclick: () => { quiz.mode = 'pick'; render(); } }, 'QUIT')), card);
       if (answered) v.append(h('button', { class: 'go', style: 'justify-content:center', onclick: () => { if (quiz.i + 1 < quiz.list.length) { quiz.i++; quiz.picked = null; } else quiz.mode = 'end'; render(); scrollTo(0, 0); } },
