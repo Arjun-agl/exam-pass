@@ -417,9 +417,13 @@
   }
 
   /* ---------- Coming back to the app ---------- */
+  // Only redraw when something really changed, so a half-typed task or note survives switching apps.
   function resync() {
-    const s = read(); if (s && s.updated > state.updated) state = s;
-    checkTimer(); render();
+    let changed = false;
+    const s = read(); if (s && s.updated > state.updated) { state = s; changed = true; }
+    const nowDay = L.istDate(); if (nowDay !== lastToday) { if (viewDate === lastToday) viewDate = nowDay; lastToday = nowDay; changed = true; }
+    if (state.timer) { checkTimer(); changed = true; }
+    if (changed) render();
   }
   document.addEventListener('visibilitychange', () => { if (!document.hidden) resync(); });
   addEventListener('pageshow', resync);
