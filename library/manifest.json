@@ -9,6 +9,427 @@
   "iv": "6bXFaIGUQCkmDWPX",
   "ct": "VFPgsj30OK/FpMc1ZYWi/PMhmswlCzKGe7D2EUA6iN22"
  },
- "files": [],
- "updated": 1795464121412
+ "files": [
+  {
+   "id": "physics-01-notes",
+   "subject": "Physics",
+   "ch": 1,
+   "chapter": "Electric Charges and Fields",
+   "kind": "notes",
+   "iv": "mpE4bE03N1PYCuFc",
+   "size": 514395,
+   "hash": "f135a3bfbc1e4eeaa156b529be2eef207c4791d4e7cc41d7eaefb95f74045eae"
+  },
+  {
+   "id": "physics-01-revision",
+   "subject": "Physics",
+   "ch": 1,
+   "chapter": "Electric Charges and Fields",
+   "kind": "revision",
+   "iv": "cgwoJR6KGt5T3ttD",
+   "size": 225876,
+   "hash": "1917ec3e109beac0b989c09394ca8d667f54a8a5f962504257e07bc1946b7858"
+  },
+  {
+   "id": "physics-01-worksheet",
+   "subject": "Physics",
+   "ch": 1,
+   "chapter": "Electric Charges and Fields",
+   "kind": "worksheet",
+   "iv": "LfIkCx4mWWMQl9cz",
+   "size": 259278,
+   "hash": "ee974791b97488beb97548a119d773f7ddb3c0a026152168083222a8e8c0f83a"
+  },
+  {
+   "id": "physics-02-notes",
+   "subject": "Physics",
+   "ch": 2,
+   "chapter": "Electrostatic Potential and Capacitance",
+   "kind": "notes",
+   "iv": "quIiUDxI2cKgJsFW",
+   "size": 475335,
+   "hash": "b85513b1abbc3bc831b628f97b3df3293d9dec34b4e345d1e4e3fe85b7aa04be"
+  },
+  {
+   "id": "physics-02-revision",
+   "subject": "Physics",
+   "ch": 2,
+   "chapter": "Electrostatic Potential and Capacitance",
+   "kind": "revision",
+   "iv": "316bFcpm/7Dn/ZiK",
+   "size": 204096,
+   "hash": "6c3b5712a0fd58821947bff2516e2ff2e84fd1c6c92c7edec530e827bb0252bc"
+  },
+  {
+   "id": "physics-02-worksheet",
+   "subject": "Physics",
+   "ch": 2,
+   "chapter": "Electrostatic Potential and Capacitance",
+   "kind": "worksheet",
+   "iv": "zP+xy1G7ihpyLELk",
+   "size": 227302,
+   "hash": "d717375dc623304c65c841d795650e2c2c9b3fb4d4a4db320e44c663148f44a0"
+  },
+  {
+   "id": "physics-03-notes",
+   "subject": "Physics",
+   "ch": 3,
+   "chapter": "Current Electricity",
+   "kind": "notes",
+   "iv": "ThbY3Wq56cQVACAT",
+   "size": 409793,
+   "hash": "87acf3430747c5f5c28b0f8081afa99513b1eb9c4fb58c79a1570e05099b55e1"
+  },
+  {
+   "id": "physics-03-revision",
+   "subject": "Physics",
+   "ch": 3,
+   "chapter": "Current Electricity",
+   "kind": "revision",
+   "iv": "4vSljUQA/JLU/K4W",
+   "size": 183340,
+   "hash": "04fe1e8ef4a3f939404a0b5843dffd3b996d7dc80899ab49eecc0c281e44290f"
+  },
+  {
+   "id": "physics-03-worksheet",
+   "subject": "Physics",
+   "ch": 3,
+   "chapter": "Current Electricity",
+   "kind": "worksheet",
+   "iv": "9o+Z7LIF0zRQRtka",
+   "size": 203223,
+   "hash": "6cd19ddfa689a96ac2cc0df106bbf37c0cde1c77e36d93bb81e1a34dbaa9a0a8"
+  },
+  {
+   "id": "physics-04-notes",
+   "subject": "Physics",
+   "ch": 4,
+   "chapter": "Moving Charges and Magnetism",
+   "kind": "notes",
+   "iv": "H4j6QKK8LLE0+/zJ",
+   "size": 898653,
+   "hash": "ef89d4fafa9b5b75a656bf81d45dafae3f2e0c0b27e40796a4fee2f1f629d1c8"
+  },
+  {
+   "id": "physics-04-revision",
+   "subject": "Physics",
+   "ch": 4,
+   "chapter": "Moving Charges and Magnetism",
+   "kind": "revision",
+   "iv": "9fceC/nXTkwg1Uc2",
+   "size": 228867,
+   "hash": "56c6c0cb92b6818d59b5fac383c2da170e3e626229e08275ad546b41c7323904"
+  },
+  {
+   "id": "physics-04-worksheet",
+   "subject": "Physics",
+   "ch": 4,
+   "chapter": "Moving Charges and Magnetism",
+   "kind": "worksheet",
+   "iv": "HwQ1TIQjiJsjnn8j",
+   "size": 270502,
+   "hash": "48c3f9e1b754497a6857dd2beb7e0c3bf1c4d23d68b91e641b87621ea852224b"
+  },
+  {
+   "id": "physics-05-notes",
+   "subject": "Physics",
+   "ch": 5,
+   "chapter": "Magnetism and Matter",
+   "kind": "notes",
+   "iv": "dO6OwMdHlpj2+s6K",
+   "size": 517552,
+   "hash": "031da8ba0f4d625a2d7bdadb7eb0b543ab1c3ceecc51826fb960d36c8947c916"
+  },
+  {
+   "id": "physics-05-revision",
+   "subject": "Physics",
+   "ch": 5,
+   "chapter": "Magnetism and Matter",
+   "kind": "revision",
+   "iv": "WAscjpsw3e9HC2iX",
+   "size": 193162,
+   "hash": "959bacd639d598105b0a5517fbc6e4a5428fbaa2c777997fc246076298c0ff77"
+  },
+  {
+   "id": "physics-05-worksheet",
+   "subject": "Physics",
+   "ch": 5,
+   "chapter": "Magnetism and Matter",
+   "kind": "worksheet",
+   "iv": "3fs29VJ2vadK8qKD",
+   "size": 225486,
+   "hash": "6219b664a59288497391214924bf5fac9e375b42a02d3a9efb68449e9102f3fe"
+  },
+  {
+   "id": "physics-06-notes",
+   "subject": "Physics",
+   "ch": 6,
+   "chapter": "Electromagnetic Induction",
+   "kind": "notes",
+   "iv": "qJ1QrEecMJbj3PSN",
+   "size": 570602,
+   "hash": "0201d871290bb466cdfe2e719f026a7be20c898eeaa46ebb118e37282321625d"
+  },
+  {
+   "id": "physics-06-revision",
+   "subject": "Physics",
+   "ch": 6,
+   "chapter": "Electromagnetic Induction",
+   "kind": "revision",
+   "iv": "+NZxdDy3PABevc0M",
+   "size": 164350,
+   "hash": "479065cbc79eacb3a73864a8673202ce9967e3e5d54e02c22cc9a13d54d57279"
+  },
+  {
+   "id": "physics-06-worksheet",
+   "subject": "Physics",
+   "ch": 6,
+   "chapter": "Electromagnetic Induction",
+   "kind": "worksheet",
+   "iv": "C8r8pYGba5Dk/7Ib",
+   "size": 231278,
+   "hash": "2a48d4fc421e0979e3a4aa68db62b96a6478c3b0c019d7e7269065c5057e3294"
+  },
+  {
+   "id": "physics-07-notes",
+   "subject": "Physics",
+   "ch": 7,
+   "chapter": "Alternating Current",
+   "kind": "notes",
+   "iv": "eG0pzKlhWoX91fUb",
+   "size": 535362,
+   "hash": "9517cc483f3da423e570cca5450b72ed28a68ad64f7878d803c4a6f10c77ada3"
+  },
+  {
+   "id": "physics-07-revision",
+   "subject": "Physics",
+   "ch": 7,
+   "chapter": "Alternating Current",
+   "kind": "revision",
+   "iv": "ClPbc2HweMM9mTXQ",
+   "size": 150497,
+   "hash": "4defcf2c9d6682a03e703d6476bf5ffe1934696a49e44acb46e38b74da36016d"
+  },
+  {
+   "id": "physics-07-worksheet",
+   "subject": "Physics",
+   "ch": 7,
+   "chapter": "Alternating Current",
+   "kind": "worksheet",
+   "iv": "QzJyyDPE/UFAMOfC",
+   "size": 229723,
+   "hash": "919f3b70827753a1cc9abf5e4998a6a9ec828774303a2673abbe2b89ad166f45"
+  },
+  {
+   "id": "physics-08-notes",
+   "subject": "Physics",
+   "ch": 8,
+   "chapter": "Electromagnetic Waves",
+   "kind": "notes",
+   "iv": "PtyE7sOZTIaXbXli",
+   "size": 414809,
+   "hash": "6c22bef0b5635b3ebf4d35c17a20c7f051f2e3df863d403e54e67fd328f9058c"
+  },
+  {
+   "id": "physics-08-revision",
+   "subject": "Physics",
+   "ch": 8,
+   "chapter": "Electromagnetic Waves",
+   "kind": "revision",
+   "iv": "xmdiSGH+BjS3Z6N9",
+   "size": 181760,
+   "hash": "89335e27fd4235a7d1fda2397e987e324dddce84df7fcf1ebaffb369ddd5294d"
+  },
+  {
+   "id": "physics-08-worksheet",
+   "subject": "Physics",
+   "ch": 8,
+   "chapter": "Electromagnetic Waves",
+   "kind": "worksheet",
+   "iv": "Nk0A00sNbHA7wYRK",
+   "size": 226977,
+   "hash": "0d0269ca4882cbb07b1af7f68e37d8a2d451935dedce106985421a12003631f2"
+  },
+  {
+   "id": "physics-09-notes",
+   "subject": "Physics",
+   "ch": 9,
+   "chapter": "Ray Optics",
+   "kind": "notes",
+   "iv": "NgydX4qSh9xvWWtv",
+   "size": 498602,
+   "hash": "4838b2192a41b0f2a3616a34cfd37b31353848aa4ba586b829cd8c3cc005793a"
+  },
+  {
+   "id": "physics-09-revision",
+   "subject": "Physics",
+   "ch": 9,
+   "chapter": "Ray Optics",
+   "kind": "revision",
+   "iv": "PsJCQ3ICY3kFuvW3",
+   "size": 200511,
+   "hash": "ee0240c9ba3fbf4fca5c05da33250e1c056190b47308903f0a2ce59af079c488"
+  },
+  {
+   "id": "physics-09-worksheet",
+   "subject": "Physics",
+   "ch": 9,
+   "chapter": "Ray Optics",
+   "kind": "worksheet",
+   "iv": "ym7iHLCXeaiRzt4Q",
+   "size": 267678,
+   "hash": "bc28a3fe749c93212e05636d9a5e3aaddcc647c51a815ba7a7f2d5b85cd03d41"
+  },
+  {
+   "id": "physics-10-notes",
+   "subject": "Physics",
+   "ch": 10,
+   "chapter": "Wave Optics",
+   "kind": "notes",
+   "iv": "XKg2W5Ci73YSS0wI",
+   "size": 469448,
+   "hash": "e31cc713b04ec2af1f6724e56e6e8ba33e5244e0cee43d32bac11ba731da45fb"
+  },
+  {
+   "id": "physics-10-revision",
+   "subject": "Physics",
+   "ch": 10,
+   "chapter": "Wave Optics",
+   "kind": "revision",
+   "iv": "VvMhlGHbwpaYNHDD",
+   "size": 190727,
+   "hash": "a262c586289935efa3e0510d3a3df4c4f064f770621ea4378b0a8ab84ffb2cad"
+  },
+  {
+   "id": "physics-10-worksheet",
+   "subject": "Physics",
+   "ch": 10,
+   "chapter": "Wave Optics",
+   "kind": "worksheet",
+   "iv": "LJZJIruhuT2MaTMi",
+   "size": 258430,
+   "hash": "bf4c3c628b5e50d01e7f2e8980f8b476df3df77b63041dba64f4faebacd5a6c8"
+  },
+  {
+   "id": "physics-11-notes",
+   "subject": "Physics",
+   "ch": 11,
+   "chapter": "Dual Nature",
+   "kind": "notes",
+   "iv": "Fe5ODlsLJ36Pp5nv",
+   "size": 522879,
+   "hash": "2b0f3249e7dc1afeb7c68cf62ee39413f592c1b6de3c60baffe03a7ff34bb4f9"
+  },
+  {
+   "id": "physics-11-revision",
+   "subject": "Physics",
+   "ch": 11,
+   "chapter": "Dual Nature",
+   "kind": "revision",
+   "iv": "ymjEvRqjuWIG7W3n",
+   "size": 156620,
+   "hash": "03dddde6b84c05b4a7996e3a3ec356bac2c515edec355791a39187e1d0fb1542"
+  },
+  {
+   "id": "physics-11-worksheet",
+   "subject": "Physics",
+   "ch": 11,
+   "chapter": "Dual Nature",
+   "kind": "worksheet",
+   "iv": "PmfHkWF7QFIoys0S",
+   "size": 211410,
+   "hash": "159696aa2e476c3ab1ef8d07ce2a5686fb9ea223481651f71244da5a8cf5c3a1"
+  },
+  {
+   "id": "physics-12-notes",
+   "subject": "Physics",
+   "ch": 12,
+   "chapter": "Atoms",
+   "kind": "notes",
+   "iv": "giOz3rJtKVbtpvc0",
+   "size": 517026,
+   "hash": "8d23d6cdc53bc2e8c1fa688ae002cd75eedb6ff0769c4ae905e7e24246aad80b"
+  },
+  {
+   "id": "physics-12-revision",
+   "subject": "Physics",
+   "ch": 12,
+   "chapter": "Atoms",
+   "kind": "revision",
+   "iv": "A5V3yqxFT4WzZ3Pq",
+   "size": 182232,
+   "hash": "da62c8383f46cdbb82d220295624a75644fb66aec6f741b688c322fd103dbc37"
+  },
+  {
+   "id": "physics-12-worksheet",
+   "subject": "Physics",
+   "ch": 12,
+   "chapter": "Atoms",
+   "kind": "worksheet",
+   "iv": "j/PbAIe6skCubOBe",
+   "size": 225930,
+   "hash": "5586bac42657384db1f7b0557b8f9b79e2c341ba345716e09840b28e1c401fb2"
+  },
+  {
+   "id": "physics-13-notes",
+   "subject": "Physics",
+   "ch": 13,
+   "chapter": "Nuclei",
+   "kind": "notes",
+   "iv": "cC3w/ZVdWccVoTuE",
+   "size": 478248,
+   "hash": "8bc49acf53bac5d5c643013f8be759a84e5fa00cae3168467cbfef19d6ccddef"
+  },
+  {
+   "id": "physics-13-revision",
+   "subject": "Physics",
+   "ch": 13,
+   "chapter": "Nuclei",
+   "kind": "revision",
+   "iv": "gcvu+DloN7U4ogc2",
+   "size": 166962,
+   "hash": "b639dae589bf438393e909eb44b5d8c34e8e21f72f736f1a5f86a0f266b04b7e"
+  },
+  {
+   "id": "physics-13-worksheet",
+   "subject": "Physics",
+   "ch": 13,
+   "chapter": "Nuclei",
+   "kind": "worksheet",
+   "iv": "DycpKghwIUtrHlWi",
+   "size": 219894,
+   "hash": "acff8baf4e86d8d78f54c587b72488842f257d6f8efc1556f6a6497155984e89"
+  },
+  {
+   "id": "physics-14-notes",
+   "subject": "Physics",
+   "ch": 14,
+   "chapter": "Semiconductors",
+   "kind": "notes",
+   "iv": "ffnjGWc+WGk1t6g5",
+   "size": 626300,
+   "hash": "577a1b3c24096d045b9e40e88e98a20a17bd2c163d3c6f56c78067753a7c30ca"
+  },
+  {
+   "id": "physics-14-revision",
+   "subject": "Physics",
+   "ch": 14,
+   "chapter": "Semiconductors",
+   "kind": "revision",
+   "iv": "Th8YxtIpvmL1bOy+",
+   "size": 187992,
+   "hash": "1b9bc2d23f1d0fdce34557cf46f85f36a7eaedee9e21325cb8139c782aea71fe"
+  },
+  {
+   "id": "physics-14-worksheet",
+   "subject": "Physics",
+   "ch": 14,
+   "chapter": "Semiconductors",
+   "kind": "worksheet",
+   "iv": "ONw197sxxNS99T4X",
+   "size": 242538,
+   "hash": "bc5f28580822c938b247ca476fe12c6b8987e42b9a17af0a6b2c0e595d6a3676"
+  }
+ ],
+ "updated": 1795464394554
 }
