@@ -460,7 +460,7 @@
     v.append(h('div', { class: 'seg', role: 'group', 'aria-label': 'Subject' }, ['Physics', 'Chemistry', 'Maths'].map(s => h('button', { 'aria-pressed': String(lib.subject === s), onclick: () => { lib.subject = s; render(); } }, s.toUpperCase()))));
     const saved = files.filter(f => lib.have[f.id] === f.iv).length;
     if (lib.sync) v.append(h('div', { class: 'libnote' }, 'Saving ' + lib.sync.done + ' of ' + lib.sync.total + '…', h('span', { class: 'meter' }, h('div', { style: 'width:' + Math.round(lib.sync.done / lib.sync.total * 100) + '%' }))));
-    else v.append(h('div', { class: 'libnote' }, files.length ? (saved === files.length ? '✓ All ' + files.length + ' files saved on this phone' : saved + ' of ' + files.length + ' saved · open online to finish') : 'No files added yet. They will appear here.'));
+    else v.append(h('div', { class: 'libnote' }, files.length ? (saved === files.length ? '✓ ' + (files.length === 1 ? '1 file' : 'All ' + files.length + ' files') + ' saved on this phone' : saved + ' of ' + files.length + ' saved · open online to finish') : 'No files added yet. They will appear here.'));
     const group = L.SYLLABUS.find(g => g.subject === lib.subject), kinds = KINDS_FOR(lib.subject);
     group.chapters.forEach((name, i) => {
       const ch = i + 1;
