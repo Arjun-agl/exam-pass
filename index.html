@@ -172,6 +172,10 @@ input,select,textarea{font:inherit;color:var(--ink);background:var(--card);borde
 .kbtn{display:flex;flex-direction:column;align-items:flex-start;gap:1px;border:1.5px solid var(--ink);border-radius:8px;padding:6px 10px;min-height:46px;background:var(--ticket);color:var(--ticket-ink);text-align:left;flex:1 1 30%;min-width:96px}
 .kbtn .k1{font-size:17px;line-height:1.1}
 .kbtn .k2{font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;opacity:.9}
+.kwrap{display:flex;flex:1 1 30%;min-width:104px}
+.kwrap .kbtn{flex:1;min-width:0;border-radius:8px 0 0 8px}
+.ksave{width:36px;flex:none;display:flex;align-items:center;justify-content:center;border:1.5px solid var(--ink);border-left:1.5px dashed rgba(255,253,246,.6);border-radius:0 8px 8px 0;background:#d4421f;color:var(--ticket-ink)}
+.ksave.wait{background:var(--paper);color:var(--mut);border-left-color:var(--line)}
 .kbtn.missing{background:transparent;color:var(--mut);border-style:dashed;border-color:var(--line);cursor:default}
 .kbtn.wait{background:var(--paper);color:var(--ink)}
 .lockcard{background:var(--card);border:1.5px solid var(--ink);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px}

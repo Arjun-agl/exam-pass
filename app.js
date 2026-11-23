@@ -439,6 +439,22 @@
     if (save) a.setAttribute('download', (f.subject + ' Ch' + f.ch + ' ' + (f.chapter || '') + ' - ' + KINDS[f.kind]).replace(/[\\/:*?"<>|]+/g, '') + '.pdf');
     document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 60000);
   }
+  // Save a copy to the phone: iPhone/iPad get the Share sheet ("Save to Files"); everything else downloads it.
+  async function saveFile(f) {
+    let rec = null; try { rec = await idb.get('files', f.id); } catch (e) {}
+    if (!rec || rec.iv !== f.iv) { toast('Still saving this file. Try again in a moment.'); syncFiles(); return; }
+    const fname = f.subject + ' Ch' + f.ch + ' ' + (f.chapter || '') + ' - ' + KINDS[f.kind];
+    const name = fname.replace(/[\\/:*?"<>|]+/g, '').trim() + '.pdf';
+    const isApple = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const file = new File([rec.blob], name, { type: 'application/pdf' });
+    if (isApple && navigator.canShare && navigator.canShare({ files: [file] })) {
+      try { await navigator.share({ files: [file], title: name }); } catch (e) { /* closed the sheet */ }
+      return;
+    }
+    const url = URL.createObjectURL(rec.blob), a = h('a', { href: url, download: name });
+    document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 60000);
+    toast('Saved to Downloads');
+  }
   const mb = n => n >= 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB';
   function renderLibrary() {
     const v = $('v-library'); v.replaceChildren();
@@ -469,12 +485,15 @@
         h('div', { class: 'kinds' }, kinds.map(k => {
           const f = files.find(x => x.subject === lib.subject && x.ch === ch && x.kind === k);
           if (!f) return h('div', { class: 'kbtn missing' }, h('span', { class: 'k1' }, KINDS[k]), h('span', { class: 'k2' }, 'NOT ADDED YET'));
-          const ready = lib.have[f.id] === f.iv;
-          return h('button', { class: 'kbtn' + (ready ? '' : ' wait'), onclick: () => openFile(Object.assign({ chapter: name }, f)), oncontextmenu: e => { e.preventDefault(); openFile(Object.assign({ chapter: name }, f), true); } },
-            h('span', { class: 'k1' }, KINDS[k]), h('span', { class: 'k2' }, (ready ? '✓ OFFLINE · ' : 'SAVING · ') + mb(f.size)));
+          const ready = lib.have[f.id] === f.iv, ff = Object.assign({ chapter: name }, f);
+          return h('div', { class: 'kwrap' },
+            h('button', { class: 'kbtn' + (ready ? '' : ' wait'), onclick: () => openFile(ff) },
+              h('span', { class: 'k1' }, KINDS[k]), h('span', { class: 'k2' }, (ready ? '✓ OFFLINE · ' : 'SAVING · ') + mb(f.size))),
+            h('button', { class: 'ksave' + (ready ? '' : ' wait'), 'aria-label': 'Save ' + KINDS[k] + ' for ' + name + ' to your phone', title: 'Save to phone', onclick: () => saveFile(ff),
+              html: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 20h14"/></svg>' }));
         }))));
     });
-    if (files.length) v.append(h('div', { class: 'yday' }, 'Tap to open. From the PDF viewer you can share or save a copy.'));
+    if (files.length) v.append(h('div', { class: 'yday' }, 'Tap a file to read it. Tap ⤓ next to it to save a copy to your phone.'));
   }
 
   /* ================= SHEETS & SETTINGS ================= */
