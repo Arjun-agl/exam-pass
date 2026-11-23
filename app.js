@@ -299,7 +299,7 @@
       for (const r of rows) {
         const e = state.syllabus[r.id] || { l: false, n: false, r: false, note: '' }, zero = L.chapTicks(e) === 0;
         card.append(h('div', { class: 'chap' },
-          h('button', { class: 'nm', onclick: () => openNote(r.id, r.name) }, h('span', null, r.name, zero ? h('span', { class: 'pending' }, 'PENDING') : null), e.note ? h('span', { class: 'note' }, '✎ ' + e.note) : null),
+          h('button', { class: 'nm', onclick: () => openNote(r.id, r.name) }, h('span', null, h('span', { class: 'cn' }, 'CH ' + (r.i + 1)), r.name, zero ? h('span', { class: 'pending' }, 'PENDING') : null), e.note ? h('span', { class: 'note' }, '✎ ' + e.note) : null),
           ['l', 'n', 'r'].map((k, j) => h('button', { class: 'tick', 'aria-pressed': String(!!e[k]), 'aria-label': r.name + ': ' + ['Learned', 'NCERT done', 'Revised'][j],
             onclick: () => commit(s => { const x = s.syllabus[r.id] || (s.syllabus[r.id] = { l: false, n: false, r: false, note: '' }); x[k] = !x[k]; }) }, e[k] ? '✓' : ''))));
       }
