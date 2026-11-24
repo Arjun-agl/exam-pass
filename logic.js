@@ -169,6 +169,20 @@
     });
   }
 
+  // Save a profile and keep the exam list in step: the goal exam shows as a countdown event with its date,
+  // and another goal's event (e.g. the original user's NSAT) is dropped. First-time setup also trims by stream.
+  function applyProfile(state, d, firstTime) {
+    const oldGoal = state.profile && state.profile.goal ? state.profile.goal.name : '';
+    let ev = firstTime ? eventsForStream(state.events, d.stream, d.extra) : state.events.slice();
+    const goalNames = GOALS.concat(oldGoal ? [oldGoal] : []);
+    ev = ev.filter(e => !(goalNames.includes(e.name) && e.name !== d.goal.name));
+    if (d.goal.name && d.goal.date) {
+      const ex = ev.find(e => e.name === d.goal.name);
+      if (ex) ex.date = d.goal.date; else ev.push({ id: uid(), name: d.goal.name, date: d.goal.date });
+    }
+    state.events = ev; state.profile = d;
+  }
+
   /* ---------- Plans made for someone (plan codes) ---------- */
   const isDate = s => typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s);
   function checkPlan(p) {
@@ -234,6 +248,6 @@
   const api = { TZ, istDate, addDays, diffDays, pretty, short, dow, uid, PLAN, planFor, planSource, dayTasks, ensureDay, sortTasks, toggleTask, addTask, deleteTask,
     hasNsatDone, hasGoalDone, goalName, streak, unfinishedBefore, carryOver, dayCounts, minutesOn, lastNDays, hm, nextEvents,
     SYLLABUS, STREAMS, EXTRAS, GOALS, streamSubjects, subjectGroups, chapId, defaultSyllabus, blankSyllabus, chapTicks, subjectProgress,
-    defaultEvents, defaultState, presetState, eventsForStream, validState, migrate, checkPlan, makePlanCode, readPlanCode, importPlan, qid, recordAnswer, shuffle };
+    defaultEvents, defaultState, presetState, eventsForStream, applyProfile, validState, migrate, checkPlan, makePlanCode, readPlanCode, importPlan, qid, recordAnswer, shuffle };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.Logic = api;
 })(typeof window !== 'undefined' ? window : globalThis);

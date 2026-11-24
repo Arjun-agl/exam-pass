@@ -616,14 +616,14 @@
       h('div', { style: 'font-size:20px;line-height:1.25' }, 'Your CBSE Class 12 study plan, focus timer, syllabus tracker and quizzes. First, a few things about you.'),
       profileForm(null, 'Start →', d => {
         v.dataset.drawn = '';
-        commit(s => { s.profile = d; s.events = L.eventsForStream(s.events, d.stream, d.extra); });
+        commit(s => L.applyProfile(s, d, true));
         viewDate = L.istDate(); tab = 'today'; toast('All set. Now get your personal plan.');
       }),
       h('button', { class: 'btn', style: 'margin-top:4px', onclick: () => restore.click() }, 'I have a backup file'), restore);
   }
   function openProfile() {
     sheet(h('h2', null, 'Stream and goal'), profileForm(state.profile, 'Save', d => {
-      closeSheet(); commit(s => { s.profile = d; }); toast('Saved');
+      closeSheet(); commit(s => L.applyProfile(s, d, false)); toast('Saved');
     }), h('button', { class: 'btn', onclick: closeSheet }, 'Cancel'));
   }
 

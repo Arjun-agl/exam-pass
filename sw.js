@@ -1,5 +1,5 @@
 // Makes the app work offline after the first visit. Your data stays in this device's storage.
-const CACHE = 'exam-pass-v10';
+const CACHE = 'exam-pass-v11';
 const SHELL = ['./', './index.html', './app.js', './logic.js', './questions.js', './manifest.json', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
