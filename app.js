@@ -73,7 +73,7 @@
   function saveUI() {
     try {
       const q = quiz;
-      localStorage.setItem(UIKEY, JSON.stringify({ t: Date.now(), day: L.istDate(), tab, viewDate, y: Math.round(scrollY),
+      localStorage.setItem(UIKEY, JSON.stringify({ t: Date.now(), day: L.istDate(), tab, viewDate, y: Math.round(scrollY), mini: timerMini,
         libSubject: lib.subject,
         quiz: q.mode === 'pick' ? { mode: 'pick', chapter: q.chapter } : { mode: q.mode, kind: q.kind, chapter: q.chapter, ids: q.list.map(L.qid), i: q.i, score: q.score, picked: q.picked } }));
     } catch (e) {}
@@ -81,7 +81,7 @@
   function restoreUI() {
     let u; try { u = JSON.parse(localStorage.getItem(UIKEY)); } catch (e) {}
     if (!u || Date.now() - u.t > 12 * 3600e3) return;
-    restoreY = u.y || 0;
+    restoreY = u.y || 0; timerMini = !!u.mini;
     if (['today', 'focus', 'syllabus', 'quiz', 'library'].includes(u.tab)) tab = u.tab;
     if (u.day === L.istDate() && /^\d{4}-\d{2}-\d{2}$/.test(u.viewDate || '')) viewDate = u.viewDate;
     if (u.libSubject) lib.subject = u.libSubject;
@@ -278,9 +278,26 @@
     } else commit(s => { s.timer.phase = 'done-break'; });
     chime(); keepAwake(false);
   }
+  // The running timer can shrink to a bar above the tabs so the rest of the app stays usable.
+  let timerMini = false;
+  function renderMini() {
+    const m = $('minibar'), t = state.timer, running = t && (t.phase === 'focus' || t.phase === 'break');
+    const on = !!(running && timerMini);
+    m.hidden = !on; document.body.classList.toggle('has-mini', on);
+    if (!on) { m.replaceChildren(); return; }
+    const rem = remainingMs(t);
+    m.className = 'minibar' + (t.phase === 'break' ? ' brk' : '');
+    m.replaceChildren(
+      h('button', { class: 'mini-main', onclick: () => { timerMini = false; render(); }, 'aria-label': 'Show the full timer' },
+        h('span', { class: 'mini-time poster', id: 'mini-time' }, mmss(rem)),
+        h('span', { class: 'mini-txt' }, h('span', { class: 'mono' }, t.paused ? 'Paused' : t.phase === 'focus' ? 'Focus · tap to open' : 'Break · tap to open'), h('span', { class: 'mini-task' }, t.phase === 'focus' ? t.task : 'Break time'))),
+      h('button', { class: 'mini-btn', onclick: () => commit(s => { const x = s.timer; if (!x) return; if (x.paused) { x.endTs = Date.now() + x.remaining; x.paused = false; } else { x.remaining = x.endTs - Date.now(); x.paused = true; } }) }, t.paused ? 'Resume' : 'Pause'));
+  }
   function renderOverlay() {
     const o = $('overlay'), t = state.timer;
-    if (!t) { o.hidden = true; o.replaceChildren(); return; }
+    if (t && (t.phase === 'done-focus' || t.phase === 'done-break')) timerMini = false; // time's up: always show it big
+    renderMini();
+    if (!t || timerMini) { o.hidden = true; o.replaceChildren(); return; }
     o.hidden = false; o.className = 'overlay' + (t.phase === 'break' || t.phase === 'done-break' ? ' brk' : '');
     o.replaceChildren();
     if (t.phase === 'focus' || t.phase === 'break') {
@@ -291,7 +308,8 @@
         h('div', { class: 'task-name' }, t.phase === 'focus' ? t.task : 'Break time'),
         h('div', { class: 'btns' },
           h('button', { class: 'btn pop', onclick: () => commit(s => { const x = s.timer; if (x.paused) { x.endTs = Date.now() + x.remaining; x.paused = false; } else { x.remaining = x.endTs - Date.now(); x.paused = true; } }) }, t.paused ? 'Resume' : 'Pause'),
-          h('button', { class: 'btn', onclick: stopTimer }, t.phase === 'focus' ? 'Stop' : 'Skip break')));
+          h('button', { class: 'btn', onclick: stopTimer }, t.phase === 'focus' ? 'Stop' : 'Skip break')),
+        h('button', { class: 'btn', style: 'width:100%;max-width:360px;background:transparent', onclick: () => { timerMini = true; render(); } }, 'Hide timer · use other tabs ↓'));
     } else if (t.phase === 'done-focus') {
       o.append(h('div', { class: 'mono phase' }, "Time's up · " + t.focus + ' min logged'),
         h('div', { class: 'poster', style: 'font-size:56px;line-height:.9;text-align:center' }, 'NICE WORK'),
@@ -322,6 +340,7 @@
       checkTimer();
       const host = $('ring-host'), cur = state.timer;
       if (host && cur && (cur.phase === 'focus' || cur.phase === 'break')) { const rem = remainingMs(cur); host.innerHTML = ringSVG(rem / cur.durMs, mmss(rem), cur.phase === 'focus' ? 'STAY WITH IT' : 'STRETCH · WATER', cur.phase === 'break'); }
+      const mt = $('mini-time'); if (mt && cur && (cur.phase === 'focus' || cur.phase === 'break')) mt.textContent = mmss(remainingMs(cur));
     }
     const nowDay = L.istDate();
     if (nowDay !== lastToday) { if (viewDate === lastToday) viewDate = nowDay; lastToday = nowDay; render(); }
