@@ -4,14 +4,14 @@
         physics-1-notes.pdf      physics-1-revision.pdf      physics-1-worksheet.pdf
         chemistry-5-notes.pdf    maths-7-revision.pdf        maths-7-worksheet.pdf
       (subject, NCERT chapter number, then notes / revision / worksheet; Maths has no notes)
-   2. Run:  node tools/encrypt-library.js
+   2. Run:  node tools/encrypt-library.js   (LIB_SRC=<folder> to read PDFs from another folder, e.g. the watermarked copies)
    3. Type the library code when asked.
    Output goes to study-app/library/ (safe to upload). library-source/ is never uploaded. */
 'use strict';
 const fs = require('fs'), path = require('path'), crypto = require('crypto'), readline = require('readline');
 const L = require('../logic.js');
 
-const ROOT = path.join(__dirname, '..'), SRC = path.join(ROOT, 'library-source'), OUT = path.join(ROOT, 'library'), FILES = path.join(OUT, 'files');
+const ROOT = path.join(__dirname, '..'), SRC = process.env.LIB_SRC || path.join(ROOT, 'library-source'), OUT = path.join(ROOT, 'library'), FILES = path.join(OUT, 'files');
 const MAN = path.join(OUT, 'manifest.json'), ITER = 310000, CHECK = 'exam-pass-library';
 const SUBJ = { physics: 'Physics', chemistry: 'Chemistry', maths: 'Maths', math: 'Maths', biology: 'Biology', bio: 'Biology' };
 const KIND = { notes: 'notes', note: 'notes', revision: 'revision', rev: 'revision', worksheet: 'worksheet', wksh: 'worksheet', ws: 'worksheet' };
