@@ -60,6 +60,37 @@
     if (needSetup) { renderSetup(); renderOverlay(); return; }
     if (tab === 'today') renderToday(); else if (tab === 'focus') renderFocus(); else if (tab === 'syllabus') renderSyllabus(); else if (tab === 'library') renderLibrary(); else renderQuiz();
     renderOverlay();
+    saveUI();
+  }
+
+  /* ---------- Remember where you were ----------
+     Phones often close a backgrounded web app; this puts you back on the same tab, day, quiz question and subject. */
+  const UIKEY = 'exam-pass-ui';
+  let restoreY = 0;
+  // Save the scroll spot too when the app goes into the background.
+  document.addEventListener('visibilitychange', () => { if (document.hidden) saveUI(); });
+  addEventListener('pagehide', saveUI);
+  function saveUI() {
+    try {
+      const q = quiz;
+      localStorage.setItem(UIKEY, JSON.stringify({ t: Date.now(), day: L.istDate(), tab, viewDate, y: Math.round(scrollY),
+        libSubject: lib.subject,
+        quiz: q.mode === 'pick' ? { mode: 'pick', chapter: q.chapter } : { mode: q.mode, kind: q.kind, chapter: q.chapter, ids: q.list.map(L.qid), i: q.i, score: q.score, picked: q.picked } }));
+    } catch (e) {}
+  }
+  function restoreUI() {
+    let u; try { u = JSON.parse(localStorage.getItem(UIKEY)); } catch (e) {}
+    if (!u || Date.now() - u.t > 12 * 3600e3) return;
+    restoreY = u.y || 0;
+    if (['today', 'focus', 'syllabus', 'quiz', 'library'].includes(u.tab)) tab = u.tab;
+    if (u.day === L.istDate() && /^\d{4}-\d{2}-\d{2}$/.test(u.viewDate || '')) viewDate = u.viewDate;
+    if (u.libSubject) lib.subject = u.libSubject;
+    const q = u.quiz;
+    if (q && CHAPTERS.includes(q.chapter)) quiz.chapter = q.chapter;
+    if (q && q.mode !== 'pick' && Array.isArray(q.ids)) {
+      const byId = new Map(QUESTIONS.map(x => [L.qid(x), x])), list = q.ids.map(id => byId.get(id));
+      if (list.length && list.every(Boolean) && q.i >= 0 && q.i < list.length) Object.assign(quiz, { mode: q.mode === 'end' ? 'end' : 'run', kind: q.kind, list, i: q.i, score: q.score || 0, picked: q.picked == null ? null : q.picked });
+    }
   }
 
   /* ================= TODAY ================= */
@@ -733,7 +764,9 @@
   addEventListener('pageshow', resync);
   addEventListener('storage', e => { if (e.key === KEY) resync(); });
 
+  restoreUI();
   checkTimer();
-  render();
+  show(tab);
+  if (restoreY) requestAnimationFrame(() => scrollTo(0, restoreY));
   if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 })();
