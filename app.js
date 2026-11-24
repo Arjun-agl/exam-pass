@@ -75,7 +75,7 @@
       const q = quiz;
       localStorage.setItem(UIKEY, JSON.stringify({ t: Date.now(), day: L.istDate(), tab, viewDate, y: Math.round(scrollY), mini: timerMini,
         libSubject: lib.subject,
-        quiz: q.mode === 'pick' ? { mode: 'pick', chapter: q.chapter } : { mode: q.mode, kind: q.kind, chapter: q.chapter, ids: q.list.map(L.qid), orders: q.orders, i: q.i, score: q.score, picked: q.picked } }));
+        quiz: q.mode === 'pick' ? { mode: 'pick', chapter: q.chapter } : { mode: q.mode, kind: q.kind, chapter: q.chapter, ids: q.list.map(L.qid), orders: q.orders, i: q.i, score: q.score, picked: q.picked, skipped: q.skipped } }));
     } catch (e) {}
   }
   function restoreUI() {
@@ -94,7 +94,8 @@
         const okOrders = Array.isArray(q.orders) && q.orders.length === list.length && q.orders.every(L.validOrder)
           && list.every((x, n) => (x.type === 'ar' || x.fixed) ? q.orders[n].join() === '0,1,2,3' : true);
         Object.assign(quiz, { mode: q.mode === 'end' ? 'end' : 'run', kind: q.kind, list, orders: okOrders ? q.orders : list.map(x => L.optionOrder(x)),
-          i: q.i, score: q.score || 0, picked: okOrders && q.picked != null ? q.picked : null });
+          i: q.i, score: q.score || 0, picked: okOrders && q.picked != null ? q.picked : null,
+          skipped: Array.isArray(q.skipped) ? [...new Set(q.skipped)].filter(n => Number.isInteger(n) && n >= 0 && n < list.length) : [] });
       }
     }
   }
@@ -403,13 +404,23 @@
   function quizGroups() {
     return L.subjectGroups(state).map(g => ({ subject: g.subject, chapters: g.chapters.filter(c => CHAPTERS.includes(c)) })).filter(g => g.chapters.length);
   }
-  let quiz = { mode: 'pick', chapter: null, list: [], orders: [], i: 0, score: 0, picked: null, kind: 'quick' };
+  let quiz = { mode: 'pick', chapter: null, list: [], orders: [], i: 0, score: 0, picked: null, kind: 'quick', skipped: [] };
+  // Go to the next question, or to the score screen after the last one.
+  function nextQ() { if (quiz.i + 1 < quiz.list.length) { quiz.i++; quiz.picked = null; } else quiz.mode = 'end'; render(); scrollTo(0, 0); }
+  // Skip: leave this question unanswered (no score, not a mistake) and move on; it can be answered from the score screen.
+  function skipQ() { if (quiz.picked != null) return; if (!quiz.skipped.includes(quiz.i)) quiz.skipped.push(quiz.i); nextQ(); }
+  // A new round with only the skipped questions, keeping each one's option order.
+  function startSkipped() {
+    const idx = quiz.skipped.slice().sort((a, b) => a - b); if (!idx.length) return;
+    quiz = Object.assign(quiz, { mode: 'run', kind: 'skipped', list: idx.map(n => quiz.list[n]), orders: idx.map(n => quiz.orders[n]), i: 0, score: 0, picked: null, skipped: [] });
+    render(); scrollTo(0, 0);
+  }
   function mistakeQs() { const m = state.quiz.mistakes; return QUESTIONS.filter(q => m[L.qid(q)]); }
   function startQuiz(kind) {
     const pool = kind === 'mistakes' ? mistakeQs() : QUESTIONS.filter(q => q.chapter === quiz.chapter);
     if (!pool.length) { toast(kind === 'mistakes' ? 'No mistakes to retry' : 'Pick a chapter first'); return; }
     const list = L.shuffle(pool).slice(0, kind === 'mistakes' ? pool.length : 10);
-    quiz = Object.assign(quiz, { mode: 'run', kind, list, orders: list.map(q => L.optionOrder(q)), i: 0, score: 0, picked: null });
+    quiz = Object.assign(quiz, { mode: 'run', kind, list, orders: list.map(q => L.optionOrder(q)), i: 0, score: 0, picked: null, skipped: [] });
     render(); scrollTo(0, 0);
   }
   function renderQuiz() {
@@ -437,7 +448,7 @@
       const q = quiz.list[quiz.i], order = quiz.orders[quiz.i] || [0, 1, 2, 3], answered = quiz.picked != null;
       const rightPos = L.rightPosition(q, order), right = answered && L.isRight(q, order, quiz.picked);
       const card = h('div', { class: 'qcard' },
-        h('div', { class: 'qnum mono' }, h('span', null, 'Q ' + (quiz.i + 1) + ' / ' + quiz.list.length), h('span', null, quiz.kind === 'mistakes' ? 'Mistakes' : q.type === 'ar' ? 'Assertion-Reason' : q.chapter)),
+        h('div', { class: 'qnum mono' }, h('span', null, 'Q ' + (quiz.i + 1) + ' / ' + quiz.list.length), h('span', null, quiz.kind === 'mistakes' ? 'Mistakes' : quiz.kind === 'skipped' ? 'Skipped' : q.type === 'ar' ? 'Assertion-Reason' : q.chapter)),
         h('div', { class: 'qtext' }, rich(q.q)),
         order.map((orig, k) => h('button', { class: 'opt' + (answered && k === rightPos ? ' right' : '') + (answered && k === quiz.picked && k !== rightPos ? ' wrong' : ''), disabled: answered,
           onclick: () => { const ok = L.isRight(q, order, k); quiz.picked = k; if (ok) quiz.score++; commit(s => L.recordAnswer(s, L.qid(q), ok)); } },
@@ -445,15 +456,20 @@
       if (answered) card.append(...[h('div', { class: 'verdict', style: 'color:' + (right ? 'var(--done)' : 'var(--warn)') }, right ? 'RIGHT!' : 'NOT QUITE'),
         right ? null : h('div', { class: 'explain' }, 'Correct: ' + 'ABCD'[rightPos] + '. ', rich(q.options[q.answer])),
         q.explain ? h('div', { class: 'explain', style: 'color:var(--mut)' }, rich(q.explain)) : null].filter(Boolean));
-      v.append(h('div', { class: 'head' }, h('div', null, h('div', { class: 'mono' }, 'Score ' + quiz.score), h('div', { class: 'date-big poster' }, quiz.kind === 'mistakes' ? 'Fix mistakes' : 'Quick 10')),
+      v.append(h('div', { class: 'head' }, h('div', null, h('div', { class: 'mono' }, 'Score ' + quiz.score), h('div', { class: 'date-big poster' }, quiz.kind === 'mistakes' ? 'Fix mistakes' : quiz.kind === 'skipped' ? 'Skipped ones' : 'Quick 10')),
         h('button', { class: 'addbtn', onclick: () => { quiz.mode = 'pick'; render(); } }, 'QUIT')), card);
-      if (answered) v.append(h('button', { class: 'go', style: 'justify-content:center', onclick: () => { if (quiz.i + 1 < quiz.list.length) { quiz.i++; quiz.picked = null; } else quiz.mode = 'end'; render(); scrollTo(0, 0); } },
-        h('span', { class: 'poster' }, quiz.i + 1 < quiz.list.length ? 'NEXT →' : 'SEE SCORE →')));
+      const last = quiz.i + 1 >= quiz.list.length;
+      if (answered) v.append(h('button', { class: 'go', style: 'justify-content:center', onclick: nextQ },
+        h('span', { class: 'poster' }, last ? 'SEE SCORE →' : 'NEXT →')));
+      else v.append(h('button', { class: 'btn skipbtn', onclick: skipQ }, last ? 'Skip · see score →' : 'Skip this one →'));
     } else {
-      const n = quiz.list.length, pct = quiz.score / n;
-      v.append(h('div', { class: 'head' }, h('div', null, h('div', { class: 'mono' }, quiz.kind === 'mistakes' ? 'Mistakes round' : quiz.chapter), h('div', { class: 'date-big poster' }, 'Your score'))),
-        h('div', { class: 'qcard', style: 'align-items:center' }, h('div', { class: 'score poster' }, quiz.score + '/' + n),
-          h('div', { class: 'explain', style: 'text-align:center' }, pct === 1 ? 'Perfect. Nothing to fix.' : pct >= .7 ? 'Solid. Retry the ones you missed.' : 'Good that you found these now, not in the exam.')));
+      // Score is out of the questions actually answered; skipped ones are listed separately.
+      const sk = quiz.skipped.length, n = quiz.list.length - sk, pct = n ? quiz.score / n : 0;
+      v.append(h('div', { class: 'head' }, h('div', null, h('div', { class: 'mono' }, quiz.kind === 'mistakes' ? 'Mistakes round' : quiz.kind === 'skipped' ? 'Skipped ones' : quiz.chapter), h('div', { class: 'date-big poster' }, 'Your score'))),
+        h('div', { class: 'qcard', style: 'align-items:center' }, h('div', { class: 'score poster' }, n ? quiz.score + '/' + n : '–'),
+          sk ? h('div', { class: 'mono', style: 'text-align:center' }, sk + ' skipped') : null,
+          h('div', { class: 'explain', style: 'text-align:center' }, !n ? 'You skipped them all. Answer them below when ready.' : pct === 1 ? 'Perfect. Nothing to fix.' : pct >= .7 ? 'Solid. Retry the ones you missed.' : 'Good that you found these now, not in the exam.')));
+      if (sk) v.append(h('button', { class: 'btn primary', onclick: startSkipped }, 'Answer skipped (' + sk + ')'));
       if (mCount) v.append(h('button', { class: 'btn danger', onclick: () => startQuiz('mistakes') }, 'Retry my mistakes (' + mCount + ')'));
       v.append(h('div', { class: 'row2' }, h('button', { class: 'btn', onclick: () => { quiz.mode = 'pick'; render(); } }, 'Pick chapter'), h('button', { class: 'btn primary', onclick: () => startQuiz('quick') }, 'Another 10')));
     }
