@@ -75,7 +75,7 @@
       const q = quiz;
       localStorage.setItem(UIKEY, JSON.stringify({ t: Date.now(), day: L.istDate(), tab, viewDate, y: Math.round(scrollY), mini: timerMini,
         libSubject: lib.subject,
-        quiz: q.mode === 'pick' ? { mode: 'pick', chapter: q.chapter } : { mode: q.mode, kind: q.kind, chapter: q.chapter, ids: q.list.map(L.qid), i: q.i, score: q.score, picked: q.picked } }));
+        quiz: q.mode === 'pick' ? { mode: 'pick', chapter: q.chapter } : { mode: q.mode, kind: q.kind, chapter: q.chapter, ids: q.list.map(L.qid), orders: q.orders, i: q.i, score: q.score, picked: q.picked } }));
     } catch (e) {}
   }
   function restoreUI() {
@@ -89,7 +89,13 @@
     if (q && CHAPTERS.includes(q.chapter)) quiz.chapter = q.chapter;
     if (q && q.mode !== 'pick' && Array.isArray(q.ids)) {
       const byId = new Map(QUESTIONS.map(x => [L.qid(x), x])), list = q.ids.map(id => byId.get(id));
-      if (list.length && list.every(Boolean) && q.i >= 0 && q.i < list.length) Object.assign(quiz, { mode: q.mode === 'end' ? 'end' : 'run', kind: q.kind, list, i: q.i, score: q.score || 0, picked: q.picked == null ? null : q.picked });
+      if (list.length && list.every(Boolean) && q.i >= 0 && q.i < list.length) {
+        // Reuse the exact option order that was on screen; if it can't be trusted, show the question again unanswered.
+        const okOrders = Array.isArray(q.orders) && q.orders.length === list.length && q.orders.every(L.validOrder)
+          && list.every((x, n) => (x.type === 'ar' || x.fixed) ? q.orders[n].join() === '0,1,2,3' : true);
+        Object.assign(quiz, { mode: q.mode === 'end' ? 'end' : 'run', kind: q.kind, list, orders: okOrders ? q.orders : list.map(x => L.optionOrder(x)),
+          i: q.i, score: q.score || 0, picked: okOrders && q.picked != null ? q.picked : null });
+      }
     }
   }
 
@@ -376,14 +382,34 @@
     setTimeout(() => ta.focus(), 50);
   }
 
-  /* ================= QUIZ ================= */
+  /* ================= QUIZ =================
+     Options of normal MCQs are shown in a shuffled order. quiz.orders[i][k] = which ORIGINAL option sits at shown
+     position k, so the stored answer index never changes and marking is always against the original answer. */
   const CHAPTERS = [...new Set(QUESTIONS.map(q => q.chapter))];
-  let quiz = { mode: 'pick', chapter: CHAPTERS[0] || null, list: [], i: 0, score: 0, picked: null, kind: 'quick' };
+  // Safe rich text: plain text plus <sub>/<sup> only; everything else stays as text.
+  function rich(str) {
+    const frag = document.createDocumentFragment(), stack = [frag], re = /<(\/?)(sub|sup)>/g;
+    let last = 0, m; str = String(str == null ? '' : str);
+    while ((m = re.exec(str))) {
+      if (m.index > last) stack[stack.length - 1].append(str.slice(last, m.index));
+      if (!m[1]) { const el = document.createElement(m[2]); stack[stack.length - 1].append(el); stack.push(el); }
+      else if (stack.length > 1 && stack[stack.length - 1].tagName.toLowerCase() === m[2]) stack.pop();
+      last = re.lastIndex;
+    }
+    if (last < str.length) stack[stack.length - 1].append(str.slice(last));
+    return frag;
+  }
+  // Chapters with questions, grouped by the person's subjects, in NCERT order.
+  function quizGroups() {
+    return L.subjectGroups(state).map(g => ({ subject: g.subject, chapters: g.chapters.filter(c => CHAPTERS.includes(c)) })).filter(g => g.chapters.length);
+  }
+  let quiz = { mode: 'pick', chapter: null, list: [], orders: [], i: 0, score: 0, picked: null, kind: 'quick' };
   function mistakeQs() { const m = state.quiz.mistakes; return QUESTIONS.filter(q => m[L.qid(q)]); }
   function startQuiz(kind) {
     const pool = kind === 'mistakes' ? mistakeQs() : QUESTIONS.filter(q => q.chapter === quiz.chapter);
-    if (!pool.length) { toast(kind === 'mistakes' ? 'No mistakes to retry' : 'No questions in this chapter yet'); return; }
-    quiz = Object.assign(quiz, { mode: 'run', kind, list: L.shuffle(pool).slice(0, kind === 'mistakes' ? pool.length : 10), i: 0, score: 0, picked: null });
+    if (!pool.length) { toast(kind === 'mistakes' ? 'No mistakes to retry' : 'Pick a chapter first'); return; }
+    const list = L.shuffle(pool).slice(0, kind === 'mistakes' ? pool.length : 10);
+    quiz = Object.assign(quiz, { mode: 'run', kind, list, orders: list.map(q => L.optionOrder(q)), i: 0, score: 0, picked: null });
     render(); scrollTo(0, 0);
   }
   function renderQuiz() {
@@ -391,27 +417,34 @@
     const mCount = mistakeQs().length;
     if (quiz.mode === 'pick') {
       v.append(h('div', { class: 'head' }, h('div', null, h('div', { class: 'mono' }, 'Quiz'), h('div', { class: 'date-big poster' }, 'Test yourself'))));
-      if (!CHAPTERS.length) { v.append(h('div', { class: 'lockcard' }, h('div', { class: 'poster', style: 'font-size:24px' }, 'NEW QUESTIONS COMING'), h('div', null, 'The question bank is being refreshed with questions for every chapter. Check back soon.'))); return; }
-      v.append(h('div', { class: 'mono' }, 'Pick a chapter'), h('div', { class: 'chaplist' }, CHAPTERS.map(c => {
-        const n = QUESTIONS.filter(q => q.chapter === c).length, mm = mistakeQs().filter(q => q.chapter === c).length;
-        return h('button', { class: 'chapbtn', 'aria-pressed': String(quiz.chapter === c), onclick: () => { quiz.chapter = c; render(); } },
-          h('span', null, c), h('span', { class: 'mono' }, n + ' Q' + (mm ? ' · ' + mm + ' to fix' : '')));
-      })));
-      v.append(h('button', { class: 'go', style: 'justify-content:center', onclick: () => startQuiz('quick') }, h('span', { class: 'poster' }, 'QUICK 10 →')));
-      v.append(mCount ? h('button', { class: 'btn danger', onclick: () => startQuiz('mistakes') }, 'Retry my mistakes (' + mCount + ')')
-        : h('div', { class: 'yday' }, 'No mistakes saved. Wrong answers will appear here to retry.'));
-      v.append(h('div', { class: 'yday' }, 'A question leaves your mistakes after you get it right twice.'));
+      const groups = quizGroups();
+      if (!groups.length) { v.append(h('div', { class: 'lockcard' }, h('div', { class: 'poster', style: 'font-size:24px' }, 'NEW QUESTIONS COMING'), h('div', null, 'Questions for your subjects are on the way. Check back soon.'))); return; }
+      const all = groups.flatMap(g => g.chapters);
+      if (!all.includes(quiz.chapter)) quiz.chapter = all[0];
+      for (const g of groups) {
+        const ch = L.SYLLABUS.find(x => x.subject === g.subject).chapters;
+        v.append(h('div', { class: 'rq-sub', style: 'margin-top:4px' }, g.subject), h('div', { class: 'chaplist' }, g.chapters.map(c => {
+          const n = QUESTIONS.filter(q => q.chapter === c).length, mm = mistakeQs().filter(q => q.chapter === c).length;
+          return h('button', { class: 'chapbtn', 'aria-pressed': String(quiz.chapter === c), onclick: () => { quiz.chapter = c; render(); } },
+            h('span', null, h('span', { class: 'cn' }, 'CH ' + (ch.indexOf(c) + 1) + ' '), c), h('span', { class: 'mono' }, n + ' Q' + (mm ? ' · ' + mm + ' to fix' : '')));
+        })));
+      }
+      const bar = h('div', { class: 'quizbar' },
+        h('button', { class: 'go', style: 'justify-content:space-between', onclick: () => startQuiz('quick') }, h('span', { class: 'lbl', style: 'font-size:17px' }, quiz.chapter), h('span', { class: 'poster' }, 'QUICK 10 →')),
+        mCount ? h('button', { class: 'btn danger', onclick: () => startQuiz('mistakes') }, 'Retry my mistakes (' + mCount + ')') : null);
+      v.append(h('div', { class: 'yday' }, mCount ? 'A question leaves your mistakes after you get it right twice.' : 'Wrong answers are saved here so you can retry them.'), bar);
     } else if (quiz.mode === 'run') {
-      const q = quiz.list[quiz.i], answered = quiz.picked != null, right = answered && quiz.picked === q.answer;
+      const q = quiz.list[quiz.i], order = quiz.orders[quiz.i] || [0, 1, 2, 3], answered = quiz.picked != null;
+      const rightPos = L.rightPosition(q, order), right = answered && L.isRight(q, order, quiz.picked);
       const card = h('div', { class: 'qcard' },
-        h('div', { class: 'qnum mono' }, h('span', null, 'Q ' + (quiz.i + 1) + ' / ' + quiz.list.length), h('span', null, quiz.kind === 'mistakes' ? 'Mistakes' : q.chapter)),
-        h('div', { class: 'qtext' }, q.q),
-        q.options.map((op, k) => h('button', { class: 'opt' + (answered && k === q.answer ? ' right' : '') + (answered && k === quiz.picked && k !== q.answer ? ' wrong' : ''), disabled: answered,
-          onclick: () => { quiz.picked = k; if (k === q.answer) quiz.score++; commit(s => L.recordAnswer(s, L.qid(q), k === q.answer)); } },
-          h('span', { class: 'k' }, 'ABCD'[k]), h('span', null, op))));
+        h('div', { class: 'qnum mono' }, h('span', null, 'Q ' + (quiz.i + 1) + ' / ' + quiz.list.length), h('span', null, quiz.kind === 'mistakes' ? 'Mistakes' : q.type === 'ar' ? 'Assertion-Reason' : q.chapter)),
+        h('div', { class: 'qtext' }, rich(q.q)),
+        order.map((orig, k) => h('button', { class: 'opt' + (answered && k === rightPos ? ' right' : '') + (answered && k === quiz.picked && k !== rightPos ? ' wrong' : ''), disabled: answered,
+          onclick: () => { const ok = L.isRight(q, order, k); quiz.picked = k; if (ok) quiz.score++; commit(s => L.recordAnswer(s, L.qid(q), ok)); } },
+          h('span', { class: 'k' }, 'ABCD'[k]), h('span', { class: 'otext' }, rich(q.options[orig])))));
       if (answered) card.append(...[h('div', { class: 'verdict', style: 'color:' + (right ? 'var(--done)' : 'var(--warn)') }, right ? 'RIGHT!' : 'NOT QUITE'),
-        right ? null : h('div', { class: 'explain' }, 'Correct: ' + 'ABCD'[q.answer] + '. ' + q.options[q.answer]),
-        h('div', { class: 'explain', style: 'color:var(--mut)' }, q.explain || '')].filter(Boolean));
+        right ? null : h('div', { class: 'explain' }, 'Correct: ' + 'ABCD'[rightPos] + '. ', rich(q.options[q.answer])),
+        q.explain ? h('div', { class: 'explain', style: 'color:var(--mut)' }, rich(q.explain)) : null].filter(Boolean));
       v.append(h('div', { class: 'head' }, h('div', null, h('div', { class: 'mono' }, 'Score ' + quiz.score), h('div', { class: 'date-big poster' }, quiz.kind === 'mistakes' ? 'Fix mistakes' : 'Quick 10')),
         h('button', { class: 'addbtn', onclick: () => { quiz.mode = 'pick'; render(); } }, 'QUIT')), card);
       if (answered) v.append(h('button', { class: 'go', style: 'justify-content:center', onclick: () => { if (quiz.i + 1 < quiz.list.length) { quiz.i++; quiz.picked = null; } else quiz.mode = 'end'; render(); scrollTo(0, 0); } },

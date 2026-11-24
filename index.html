@@ -183,7 +183,11 @@ body.has-mini .views{padding-bottom:calc(160px + env(safe-area-inset-bottom,0px)
 /* Quiz */
 .qcard{background:var(--card);border:1.5px solid var(--ink);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px}
 .qnum{display:flex;justify-content:space-between}
-.qtext{font-size:22px;line-height:1.2}
+.qtext{font-size:22px;line-height:1.2;white-space:pre-line}
+.otext,.explain{white-space:pre-line}
+.qcard sub,.qcard sup{font-size:.7em;line-height:0}
+.quizbar{position:sticky;bottom:calc(76px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:8px;padding-top:8px;background:linear-gradient(rgba(239,231,214,0),var(--paper) 12px)}
+.chapbtn .cn{font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:inherit;opacity:.6}
 .opt{border:1.5px solid var(--ink);border-radius:10px;padding:11px 12px;text-align:left;font-size:19px;line-height:1.2;background:var(--card);min-height:50px;display:flex;gap:8px;align-items:flex-start}
 .opt .k{font-family:var(--mono);font-size:12px;margin-top:4px}
 .opt.right{background:#d8f3e6;border-color:var(--done)}

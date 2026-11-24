@@ -245,11 +245,23 @@
     if (!correct) { m[id] = { right: 0 }; return; }
     if (m[id]) { m[id].right = (m[id].right || 0) + 1; if (m[id].right >= 2) delete m[id]; }
   }
+  // Option shuffling. order[k] = index of the ORIGINAL option shown at position k.
+  // Assertion-Reason and "fixed" questions keep A-B-C-D. The stored answer is never changed.
+  function optionOrder(q, rand) {
+    const order = [0, 1, 2, 3];
+    if (!q || q.type === 'ar' || q.fixed) return order;
+    const r = rand || Math.random;
+    for (let i = 3; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; }
+    return order;
+  }
+  const isRight = (q, order, shownPos) => order[shownPos] === q.answer;
+  const rightPosition = (q, order) => order.indexOf(q.answer);
+  const validOrder = o => Array.isArray(o) && o.length === 4 && [...o].sort().join() === '0,1,2,3';
   function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
   const api = { TZ, istDate, addDays, diffDays, pretty, short, dow, uid, PLAN, planFor, planSource, dayTasks, ensureDay, sortTasks, toggleTask, addTask, deleteTask,
     hasNsatDone, hasGoalDone, goalName, streak, unfinishedBefore, carryOver, dayCounts, minutesOn, lastNDays, hm, nextEvents,
     SYLLABUS, STREAMS, EXTRAS, GOALS, streamSubjects, subjectGroups, chapId, defaultSyllabus, blankSyllabus, chapTicks, subjectProgress,
-    defaultEvents, defaultState, presetState, eventsForStream, applyProfile, validState, migrate, checkPlan, makePlanCode, readPlanCode, importPlan, qid, recordAnswer, shuffle };
+    defaultEvents, defaultState, presetState, eventsForStream, applyProfile, validState, migrate, checkPlan, makePlanCode, readPlanCode, importPlan, qid, recordAnswer, shuffle, optionOrder, isRight, rightPosition, validOrder };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.Logic = api;
 })(typeof window !== 'undefined' ? window : globalThis);
