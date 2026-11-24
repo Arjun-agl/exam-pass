@@ -677,79 +677,109 @@
     }), h('button', { class: 'btn', onclick: closeSheet }, 'Cancel'));
   }
 
-  // The plan request: a short form that turns into one message to send.
+  // The plan request: a step-by-step form that turns into one message to send. The draft is kept on the phone,
+  // so switching apps or closing it halfway loses nothing.
   const EVMAP = { English: [/^english practical/i, /^english exam/i], Physics: [/^physics practical/i, /^physics exam/i], Chemistry: [/^chem(istry)? practical/i, /^chem(istry)? exam/i],
     Maths: [/^maths practical/i, /^maths exam/i], Biology: [/^bio(logy)? practical/i, /^bio(logy)? exam/i], 'Physical Education': [/^pe practical/i, /^(physical education|pe) exam/i] };
+  const REQKEY = 'exam-pass-request';
+  const STATUS = ['Not yet', 'Learned', 'NCERT done', 'Revised'];
+  const statusOf = e => !e ? 0 : e.r ? 3 : e.n ? 2 : e.l ? 1 : 0;
   function openRequest() {
     const pr = state.profile || {}, today = L.istDate();
+    const who = (pr.stream || 'PCM') + '|' + (pr.extra || '');
     const subjects = ['English', ...L.streamSubjects(state), ...(pr.extra ? [pr.extra] : [])];
+    const groups = L.subjectGroups(state);
     const evDate = re => { const e = re && state.events.find(x => re.test(x.name)); return e ? e.date : ''; };
-    const d = { exams: subjects.map(s => ({ subject: s, prac: evDate((EVMAP[s] || [])[0]), theory: evDate((EVMAP[s] || [])[1]) })),
-      hoursSchool: '4', hoursWeekend: '8', commitments: '', best: 'Night', sleep: '23:00', samples: '2', goalDaily: pr.goal && pr.goal.name ? '60' : '0', rest: 'Half Sunday', notes: '' };
-    const syl = JSON.parse(JSON.stringify(state.syllabus));
-    const err = h('div', { class: 'err', role: 'alert' }), out = h('textarea', { class: 'ta', readonly: true, rows: '8', style: 'font-family:var(--mono);font-size:12px' });
-    const outWrap = h('div', { hidden: true, style: 'display:flex;flex-direction:column;gap:8px' });
-    const sec = (title, ...kids) => h('div', { class: 'qcard', style: 'gap:10px' }, h('div', { class: 'poster', style: 'font-size:22px' }, title), ...kids);
-    const field = (label, el) => h('label', null, h('div', { class: 'mono', style: 'margin-bottom:4px' }, label), el);
-    const chipField = (label, opts, key) => { const box = h('div'); const drawC = () => box.replaceChildren(h('div', { class: 'mono', style: 'margin-bottom:4px' }, label), chips(opts, d[key], o => { d[key] = o; drawC(); })); drawC(); return box; };
-    const examRows = d.exams.map(x => h('div', { style: 'display:grid;grid-template-columns:1fr 1fr;gap:6px;align-items:end' },
-      h('div', { style: 'grid-column:span 2;font-size:19px' }, x.subject),
-      field('Practical', h('input', { type: 'date', value: x.prac, onchange: e => { x.prac = e.target.value; } })),
-      field('Theory exam', h('input', { type: 'date', value: x.theory, onchange: e => { x.theory = e.target.value; } }))));
-    const chapBlocks = L.subjectGroups(state).map(g => h('div', null, h('div', { style: 'font-size:19px;margin:4px 0' }, g.subject),
-      g.chapters.map((name, i) => {
-        const id = L.chapId(g.subject, name), e = syl[id] || (syl[id] = { l: false, n: false, r: false, note: '' }), row = h('div', { class: 'chap' });
-        const drawR = () => row.replaceChildren(
-          h('div', { class: 'nm', style: 'font-size:16px' }, h('span', null, h('span', { class: 'cn' }, 'CH ' + (i + 1)), name)),
-          ...['l', 'n', 'r'].map((k, j) => h('button', { type: 'button', class: 'tick', style: 'width:34px;height:34px', 'aria-pressed': String(!!e[k]), 'aria-label': name + ': ' + ['Learned', 'NCERT done', 'Revised'][j], onclick: () => { e[k] = !e[k]; drawR(); } }, e[k] ? '✓' : '')),
-          h('button', { type: 'button', class: 'tick', style: 'width:34px;height:34px;' + (e.weak ? 'background:var(--pop);border-color:var(--ink);color:var(--ink)' : 'color:var(--mut)'), 'aria-pressed': String(!!e.weak), 'aria-label': name + ': weak chapter', onclick: () => { e.weak = !e.weak; drawR(); } }, '★'));
-        drawR(); return row;
-      })));
-    const build = () => {
+    let d = null; try { d = JSON.parse(localStorage.getItem(REQKEY)); } catch (e) {}
+    if (!d || d.who !== who) {
+      d = { who, step: 0, exams: subjects.map(s => ({ subject: s, prac: evDate((EVMAP[s] || [])[0]), theory: evDate((EVMAP[s] || [])[1]) })),
+        hoursSchool: '4', hoursWeekend: '8', commitments: '', best: 'Night', sleep: '23:00', samples: '2', goalDaily: pr.goal && pr.goal.name ? '60' : '0', rest: 'Half Sunday', notes: '', chap: {}, weak: {} };
+      groups.forEach(g => g.chapters.forEach(c => { const id = L.chapId(g.subject, c), e = state.syllabus[id]; d.chap[id] = statusOf(e); if (e && e.weak) d.weak[id] = true; }));
+    }
+    const keep = () => { try { localStorage.setItem(REQKEY, JSON.stringify(d)); } catch (e) {} };
+    const STEPS = ['Exam dates', 'Your time', 'Chapters', 'Preferences', 'Send it'];
+    const q = (label, hint, ...kids) => h('div', { class: 'rq' }, h('div', { class: 'rq-l' }, label), hint ? h('div', { class: 'rq-h' }, hint) : null, ...kids);
+    const pick = (opts, key, labelOf) => { const box = h('div'); const drawC = () => box.replaceChildren(chips(opts, d[key], o => { d[key] = o; keep(); drawC(); }, labelOf)); drawC(); return box; };
+    const err = h('div', { class: 'err', role: 'alert' });
+    function message() {
       const lines = ['EXAM PASS · PLAN REQUEST', 'Sent: ' + today,
         'Name: ' + (pr.name || '-') + ' | Stream: ' + (pr.stream || 'PCM') + ' + English' + (pr.extra ? ' + ' + pr.extra : ''),
         'Goal exam: ' + ((pr.goal && pr.goal.name) || 'none') + (pr.goal && pr.goal.date ? ' on ' + pr.goal.date : ''), '', 'EXAMS'];
-      d.exams.forEach(x => lines.push('- ' + x.subject + ': practical ' + (x.prac || '?') + ', theory ' + (x.theory || '?')));
+      d.exams.forEach(x => lines.push('- ' + x.subject + ': practical ' + (x.prac || 'not known') + ', theory ' + (x.theory || 'not known')));
       lines.push('', 'TIME', 'Study hours: school days ' + d.hoursSchool + ' h, weekends/holidays ' + d.hoursWeekend + ' h',
         'Fixed timings: ' + (d.commitments.trim() || '-'), 'Best time: ' + d.best + ' | Sleep: ' + (d.sleep || '-'), '',
-        'CHAPTERS (L learned, N NCERT done, R revised, * weak, - not started)');
-      L.subjectGroups(state).forEach(g => lines.push(g.subject + ': ' + g.chapters.map((c, i) => { const e = syl[L.chapId(g.subject, c)] || {}; const t = (e.l ? 'L' : '') + (e.n ? 'N' : '') + (e.r ? 'R' : ''); return (i + 1) + (t || '-') + (e.weak ? '*' : ''); }).join(' ')));
+        'CHAPTERS (- not yet, L learned, N NCERT done, R revised, * weak)');
+      groups.forEach(g => lines.push(g.subject + ': ' + g.chapters.map((c, i) => { const id = L.chapId(g.subject, c); return (i + 1) + ['-', 'L', 'N', 'R'][d.chap[id] || 0] + (d.weak[id] ? '*' : ''); }).join(' ')));
       lines.push('', 'PREFERENCES', 'Sample papers per subject: ' + d.samples + ' | Goal exam daily: ' + (d.goalDaily === '0' ? 'none' : d.goalDaily + ' min') + ' | Rest: ' + d.rest,
         'Notes: ' + (d.notes.trim() || '-'));
       return lines.join('\n');
-    };
-    sheet(h('h2', null, 'Request a plan'),
-      h('div', null, 'Fill this in, then send the message it makes. You get back a plan code to paste into Import plan code.'),
-      sec('1 · You', h('div', null, (pr.name || 'Student') + ' · ' + (pr.stream || 'PCM') + ' + English' + (pr.extra ? ' + ' + pr.extra : '') + ' · goal: ' + ((pr.goal && pr.goal.name) || 'none')),
-        h('button', { class: 'btn', type: 'button', onclick: () => { closeSheet(); openProfile(); } }, 'Change stream or goal first')),
-      sec('2 · Exam dates', h('div', { style: 'color:var(--mut)' }, "Leave a date empty if you don't know it yet."), ...examRows),
-      sec('3 · Your time',
-        h('div', { class: 'row2' }, field('Hours on school days', h('input', { type: 'number', inputmode: 'decimal', min: '0', max: '16', step: '0.5', value: d.hoursSchool, oninput: e => { d.hoursSchool = e.target.value; } })),
-          field('Hours on weekends', h('input', { type: 'number', inputmode: 'decimal', min: '0', max: '16', step: '0.5', value: d.hoursWeekend, oninput: e => { d.hoursWeekend = e.target.value; } }))),
-        field('School, tuition and other fixed timings', h('textarea', { rows: '2', maxlength: '300', placeholder: 'School 7:30 to 2, tuition Mon Wed Fri 5 to 7', oninput: e => { d.commitments = e.target.value; } })),
-        chipField('When you study best', ['Morning', 'Afternoon', 'Night'], 'best'),
-        field('Usual sleep time', h('input', { type: 'time', value: d.sleep, onchange: e => { d.sleep = e.target.value; } }))),
-      sec('4 · Where you are', h('div', { class: 'legend', style: 'justify-content:space-between' }, h('span', { style: 'width:auto' }, 'Tap: Learn · NCERT · Revise · ★ weak')), ...chapBlocks),
-      sec('5 · Preferences',
-        chipField('Sample papers per subject before each exam', ['0', '1', '2', '3'], 'samples'),
-        chipField('Daily time for your goal exam (minutes)', ['0', '30', '60', '90', '120'], 'goalDaily'),
-        chipField('Rest day', ['None', 'Half Sunday', 'Full Sunday'], 'rest'),
-        field('Anything else', h('textarea', { rows: '3', maxlength: '500', placeholder: 'Weak in organic. Want to finish Maths first. Holiday 20 to 25 Dec.', oninput: e => { d.notes = e.target.value; } }))),
-      err,
-      h('button', { class: 'btn primary', type: 'button', onclick: () => {
-        const h1 = parseFloat(d.hoursSchool), h2 = parseFloat(d.hoursWeekend);
-        if (!(h1 >= 0) || !(h2 >= 0)) { err.textContent = 'Fill in your study hours.'; return; }
-        if (!d.exams.some(x => x.theory)) { err.textContent = 'Add at least one theory exam date.'; return; }
-        err.textContent = '';
-        commit(s => { for (const [id, e] of Object.entries(syl)) s.syllabus[id] = Object.assign(s.syllabus[id] || {}, { l: !!e.l, n: !!e.n, r: !!e.r, weak: !!e.weak }); });
-        out.value = build(); outWrap.hidden = false; outWrap.scrollIntoView({ behavior: 'smooth' });
-      } }, 'Make my request'),
-      outWrap,
-      h('button', { class: 'btn', type: 'button', onclick: closeSheet }, 'Close'));
-    outWrap.append(h('div', { class: 'mono' }, 'Your request · send this message'), out,
-      h('div', { class: 'row2' },
-        h('button', { class: 'btn primary', type: 'button', onclick: () => copyText(out.value, 'Request') }, 'Copy'),
-        h('button', { class: 'btn', type: 'button', onclick: async () => { if (navigator.share) { try { await navigator.share({ text: out.value }); } catch (e) {} } else copyText(out.value, 'Request'); } }, 'Share')));
+    }
+    function check(step) {
+      if (step === 0 && !d.exams.some(x => x.theory)) return 'Add at least one theory exam date. Leave the others empty if you don’t know them yet.';
+      return '';
+    }
+    function body(step) {
+      if (step === 0) return [
+        h('div', { class: 'rq-h' }, 'Your school’s dates are filled in where we know them. Change any that are different. Leave a box empty if you don’t know yet.'),
+        ...d.exams.map(x => h('div', { class: 'rq-card' }, h('div', { class: 'rq-sub' }, x.subject),
+          h('div', { class: 'row2' },
+            h('label', null, h('div', { class: 'rq-h' }, 'Practical'), h('input', { type: 'date', value: x.prac, onchange: e => { x.prac = e.target.value; keep(); } })),
+            h('label', null, h('div', { class: 'rq-h' }, 'Theory exam'), h('input', { type: 'date', value: x.theory, onchange: e => { x.theory = e.target.value; keep(); } })))))];
+      if (step === 1) return [
+        q('How many hours can you study on a school day?', 'Count real study time, not time at school or tuition.', pick(['1', '2', '3', '4', '5', '6', '7+'], 'hoursSchool', o => o + ' h')),
+        q('And on weekends and holidays?', null, pick(['2', '4', '6', '8', '10', '12+'], 'hoursWeekend', o => o + ' h')),
+        q('School, tuition and other fixed timings', 'So the plan doesn’t clash with them.', h('textarea', { rows: '2', maxlength: '300', placeholder: 'School 7:30 to 2. Tuition Mon, Wed, Fri 5 to 7.', oninput: e => { d.commitments = e.target.value; keep(); } }, d.commitments)),
+        q('When do you study best?', null, pick(['Morning', 'Afternoon', 'Night'], 'best')),
+        q('When do you usually sleep?', null, h('input', { type: 'time', value: d.sleep, onchange: e => { d.sleep = e.target.value; keep(); } }))];
+      if (step === 2) return [
+        h('div', { class: 'rq-h' }, 'For each chapter, pick how far you’ve got. Each level includes the ones before it, so "Revised" means you’ve also learned it and done NCERT. Tap ★ Weak for chapters you find hard.'),
+        ...groups.map(g => {
+          const card = h('div', { class: 'rq-card' });
+          const drawG = () => {
+            const done = g.chapters.filter(c => (d.chap[L.chapId(g.subject, c)] || 0) >= 2).length;
+            card.replaceChildren(h('div', { class: 'rq-sub' }, g.subject, h('span', { class: 'rq-count' }, done + ' of ' + g.chapters.length + ' at NCERT done or more')),
+              ...g.chapters.map((c, i) => {
+                const id = L.chapId(g.subject, c), cur = d.chap[id] || 0;
+                return h('div', { class: 'rq-chap' },
+                  h('div', { class: 'rq-chap-top' }, h('span', null, h('span', { class: 'cn' }, 'CH ' + (i + 1)), c),
+                    h('button', { type: 'button', class: 'rq-weak', 'aria-pressed': String(!!d.weak[id]), 'aria-label': 'Mark ' + c + ' as weak', onclick: () => { d.weak[id] = !d.weak[id]; if (!d.weak[id]) delete d.weak[id]; keep(); drawG(); } }, '★ Weak')),
+                  h('div', { class: 'rq-seg', role: 'radiogroup', 'aria-label': c + ' progress' }, STATUS.map((s, k) =>
+                    h('button', { type: 'button', role: 'radio', 'aria-checked': String(cur === k), class: 'lv' + k, onclick: () => { d.chap[id] = k; keep(); drawG(); } }, s))));
+              }));
+          };
+          drawG(); return card;
+        })];
+      if (step === 3) return [
+        q('Sample papers per subject before each exam', 'Timed full papers. The plan puts them in the days before each exam.', pick(['0', '1', '2', '3'], 'samples')),
+        (pr.goal && pr.goal.name) ? q('Daily time for ' + pr.goal.name, null, pick(['0', '30', '60', '90', '120'], 'goalDaily', o => o === '0' ? 'None' : o + ' min')) : null,
+        q('Rest day', null, pick(['None', 'Half Sunday', 'Full Sunday'], 'rest')),
+        q('Anything else?', 'Weak areas, chapters you want first, holidays, anything the plan should know.', h('textarea', { rows: '3', maxlength: '500', placeholder: 'Weak in organic. Want to finish Biology first. Holiday 20 to 25 Dec.', oninput: e => { d.notes = e.target.value; keep(); } }, d.notes))];
+      // Step 4: review and send
+      const msg = message();
+      return [
+        h('div', { class: 'rq-h' }, 'Send this message on WhatsApp to the person who shared Exam Pass with you. You’ll get back a plan code to paste into Settings → Import plan code.'),
+        h('textarea', { class: 'ta', readonly: true, rows: '12', style: 'font-family:var(--mono);font-size:12px' }, msg),
+        h('div', { class: 'row2' },
+          h('button', { class: 'btn primary', type: 'button', onclick: () => { saveChapters(); copyText(msg, 'Request'); } }, 'Copy message'),
+          h('button', { class: 'btn', type: 'button', onclick: async () => { saveChapters(); if (navigator.share) { try { await navigator.share({ text: msg }); } catch (e) {} } else copyText(msg, 'Request'); } }, 'Share'))];
+    }
+    // The chapter answers also update the Syllabus tab, so the two always agree.
+    function saveChapters() {
+      commit(s => { for (const [id, k] of Object.entries(d.chap)) { const e = s.syllabus[id] || (s.syllabus[id] = { l: false, n: false, r: false, note: '' }); e.l = k >= 1; e.n = k >= 2; e.r = k >= 3; e.weak = !!d.weak[id]; } });
+    }
+    function draw() {
+      const step = d.step;
+      sheet(
+        h('div', { class: 'rq-top' }, h('h2', null, 'Request a plan'), h('button', { class: 'x', type: 'button', 'aria-label': 'Close', onclick: closeSheet }, '×')),
+        h('div', { class: 'rq-steps' }, STEPS.map((s, i) => h('span', { class: i < step ? 'done' : i === step ? 'now' : '' }))),
+        h('div', { class: 'mono' }, 'Step ' + (step + 1) + ' of ' + STEPS.length + ' · ' + STEPS[step]),
+        ...body(step).filter(Boolean), err,
+        h('div', { class: 'row2' },
+          step > 0 ? h('button', { class: 'btn', type: 'button', onclick: () => { err.textContent = ''; d.step--; keep(); draw(); } }, '← Back') : h('button', { class: 'btn', type: 'button', onclick: closeSheet }, 'Close'),
+          step < STEPS.length - 1 ? h('button', { class: 'btn primary', type: 'button', onclick: () => { const m = check(step); if (m) { err.textContent = m; return; } err.textContent = ''; d.step++; keep(); draw(); } }, 'Next →') : h('button', { class: 'btn', type: 'button', onclick: closeSheet }, 'Done')));
+      const sh = document.querySelector('#sheet .sheet'); if (sh) sh.scrollTop = 0;
+    }
+    draw();
   }
   function openImportPlan() {
     const ta = h('textarea', { class: 'ta', rows: '5', placeholder: 'EPP1:…', style: 'font-family:var(--mono);font-size:12px' }), err = h('div', { class: 'err', role: 'alert' }), info = h('div');
