@@ -391,7 +391,7 @@
     const mCount = mistakeQs().length;
     if (quiz.mode === 'pick') {
       v.append(h('div', { class: 'head' }, h('div', null, h('div', { class: 'mono' }, 'Quiz'), h('div', { class: 'date-big poster' }, 'Test yourself'))));
-      if (!CHAPTERS.length) { v.append(h('div', { class: 'empty' }, 'No questions loaded. Add some to questions.js.')); return; }
+      if (!CHAPTERS.length) { v.append(h('div', { class: 'lockcard' }, h('div', { class: 'poster', style: 'font-size:24px' }, 'NEW QUESTIONS COMING'), h('div', null, 'The question bank is being refreshed with questions for every chapter. Check back soon.'))); return; }
       v.append(h('div', { class: 'mono' }, 'Pick a chapter'), h('div', { class: 'chaplist' }, CHAPTERS.map(c => {
         const n = QUESTIONS.filter(q => q.chapter === c).length, mm = mistakeQs().filter(q => q.chapter === c).length;
         return h('button', { class: 'chapbtn', 'aria-pressed': String(quiz.chapter === c), onclick: () => { quiz.chapter = c; render(); } },
