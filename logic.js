@@ -45,13 +45,17 @@
   };
   for (let d = '2026-12-12'; d <= '2027-01-06'; d = addDays(d, 1)) PLAN[d] = ['!NSAT 2 hrs'];
 
-  function planFor(ds) {
-    return (PLAN[ds] || []).map((s, i) => ({ id: 'p-' + ds + '-' + i, text: s.replace(/^!/, ''), must: s[0] === '!', done: false }));
+  // A state with no `plan` uses the built-in plan above (the original user's). Everyone else gets an imported plan.
+  function planSource(state) { return state && state.plan && state.plan.days ? state.plan : null; }
+  function planFor(ds, state) {
+    const p = planSource(state);
+    const list = p ? (p.days[ds] || []) : (PLAN[ds] || []), prefix = p ? 'p' + p.rev + '-' : 'p-';
+    return list.map((s, i) => ({ id: prefix + ds + '-' + i, text: s.replace(/^!/, ''), must: s[0] === '!', done: false }));
   }
   // Read a day without changing anything (plan days appear even before they are opened).
-  function dayTasks(state, ds) { return state.days[ds] ? state.days[ds].tasks : planFor(ds); }
+  function dayTasks(state, ds) { return state.days[ds] ? state.days[ds].tasks : planFor(ds, state); }
   // Make a day real in storage before changing it.
-  function ensureDay(state, ds) { if (!state.days[ds]) state.days[ds] = { tasks: planFor(ds) }; return state.days[ds]; }
+  function ensureDay(state, ds) { if (!state.days[ds]) state.days[ds] = { tasks: planFor(ds, state) }; return state.days[ds]; }
   function sortTasks(tasks) { return tasks.map((t, i) => [t, i]).sort((a, b) => (b[0].must - a[0].must) || (a[1] - b[1])).map(x => x[0]); }
   function findTask(state, ds, id) { return ensureDay(state, ds).tasks.find(t => t.id === id); }
   function toggleTask(state, ds, id) { const t = findTask(state, ds, id); if (t) t.done = !t.done; return t; }
@@ -64,13 +68,21 @@
   }
 
   /* ---------- Streak, carry-over, stats ---------- */
-  function hasNsatDone(state, ds) { return dayTasks(state, ds).some(t => t.done && /nsat/i.test(t.text)); }
-  function streak(state, today) {
-    let d = hasNsatDone(state, today) ? today : addDays(today, -1), n = 0;
-    while (n < 4000 && hasNsatDone(state, d)) { n++; d = addDays(d, -1); }
+  // The streak follows the goal exam's name (NSAT for the original user). No goal = no streak.
+  function goalName(state) { return state && state.profile ? ((state.profile.goal && state.profile.goal.name) || '') : 'NSAT'; }
+  function hasGoalDone(state, ds, kw) {
+    if (!kw) return false;
+    const re = new RegExp(kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+    return dayTasks(state, ds).some(t => t.done && re.test(t.text));
+  }
+  function hasNsatDone(state, ds) { return hasGoalDone(state, ds, 'NSAT'); }
+  function streak(state, today, kw) {
+    if (kw === undefined) kw = goalName(state);
+    let d = hasGoalDone(state, today, kw) ? today : addDays(today, -1), n = 0;
+    while (n < 4000 && hasGoalDone(state, d, kw)) { n++; d = addDays(d, -1); }
     return n;
   }
-  function allKnownDates(state) { const s = new Set(Object.keys(state.days)); Object.keys(PLAN).forEach(d => s.add(d)); return [...s].sort(); }
+  function allKnownDates(state) { const s = new Set(Object.keys(state.days)); const p = planSource(state); Object.keys(p ? p.days : PLAN).forEach(d => s.add(d)); return [...s].sort(); }
   function unfinishedBefore(state, today) {
     const out = [];
     for (const ds of allKnownDates(state)) { if (ds >= today) break; for (const t of dayTasks(state, ds)) if (!t.done && !t.copiedTo) out.push({ ds, t }); }
@@ -97,12 +109,20 @@
   const SYLLABUS = [
     { subject: 'Physics', chapters: ['Electric Charges and Fields', 'Electrostatic Potential and Capacitance', 'Current Electricity', 'Moving Charges and Magnetism', 'Magnetism and Matter', 'Electromagnetic Induction', 'Alternating Current', 'Electromagnetic Waves', 'Ray Optics', 'Wave Optics', 'Dual Nature', 'Atoms', 'Nuclei', 'Semiconductors'] },
     { subject: 'Chemistry', chapters: ['Solutions', 'Electrochemistry', 'Chemical Kinetics', 'd and f Block', 'Coordination Compounds', 'Haloalkanes and Haloarenes', 'Alcohols, Phenols and Ethers', 'Aldehydes, Ketones and Carboxylic Acids', 'Amines', 'Biomolecules'] },
-    { subject: 'Maths', chapters: ['Relations and Functions', 'Inverse Trigonometric Functions', 'Matrices', 'Determinants', 'Continuity and Differentiability', 'Application of Derivatives', 'Integrals', 'Application of Integrals', 'Differential Equations', 'Vectors', '3D Geometry', 'Linear Programming', 'Probability'] }
+    { subject: 'Maths', chapters: ['Relations and Functions', 'Inverse Trigonometric Functions', 'Matrices', 'Determinants', 'Continuity and Differentiability', 'Application of Derivatives', 'Integrals', 'Application of Integrals', 'Differential Equations', 'Vectors', '3D Geometry', 'Linear Programming', 'Probability'] },
+    { subject: 'Biology', chapters: ['Sexual Reproduction in Flowering Plants', 'Human Reproduction', 'Reproductive Health', 'Principles of Inheritance and Variation', 'Molecular Basis of Inheritance', 'Evolution', 'Human Health and Disease', 'Microbes in Human Welfare', 'Biotechnology: Principles and Processes', 'Biotechnology and its Applications', 'Organisms and Populations', 'Ecosystem', 'Biodiversity and Conservation'] }
   ];
+  const STREAMS = { PCM: ['Physics', 'Chemistry', 'Maths'], PCB: ['Physics', 'Chemistry', 'Biology'], PCMB: ['Physics', 'Chemistry', 'Maths', 'Biology'] };
+  const EXTRAS = ['Physical Education', 'Computer Science', 'Informatics Practices', 'Hindi', 'Economics'];
+  const GOALS = ['NSAT', 'JEE Main', 'NEET', 'CUET', 'MHT-CET'];
+  function streamSubjects(state) { const p = state && state.profile; return STREAMS[(p && p.stream) || 'PCM'] || STREAMS.PCM; }
+  function subjectGroups(state) { const subs = streamSubjects(state); return SYLLABUS.filter(g => subs.includes(g.subject)); }
   const chapId = (subject, name) => subject.toLowerCase() + ':' + name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  function blankSyllabus() { const s = {}; SYLLABUS.forEach(g => g.chapters.forEach(c => { s[chapId(g.subject, c)] = { l: false, n: false, r: false, note: '' }; })); return s; }
+  // The original user's starting ticks (PCM). New users start blank.
   function defaultSyllabus() {
     const s = {}; const set = (subj, name, l, n, r) => { s[chapId(subj, name)] = { l: !!l, n: !!n, r: !!r, note: '' }; };
-    SYLLABUS.forEach(g => g.chapters.forEach(c => set(g.subject, c, 0, 0, 0)));
+    SYLLABUS.filter(g => g.subject !== 'Biology').forEach(g => g.chapters.forEach(c => set(g.subject, c, 0, 0, 0)));
     const P = SYLLABUS[0].chapters, C = SYLLABUS[1].chapters, M = SYLLABUS[2].chapters;
     P.slice(0, 10).forEach(c => set('Physics', c, 1, 1, 0)); // NCERT Ch 1-10
     ['Moving Charges and Magnetism', 'Magnetism and Matter', 'Electromagnetic Induction', 'Ray Optics', 'Wave Optics'].forEach(c => set('Physics', c, 1, 1, 1));
@@ -129,11 +149,68 @@
       ['Physical Education exam', '2026-12-11'], ['NSAT', '2027-01-07']
     ].map(([name, date]) => ({ id: uid(), name, date }));
   }
+  // The original user's setup: built-in plan (no `plan` field), PCM, NSAT goal, pre-ticked syllabus.
+  const PRESET_PROFILE = { name: '', stream: 'PCM', extra: 'Physical Education', goal: { name: 'NSAT', date: '2027-01-07' } };
+  function presetState() {
+    return { v: 1, profile: JSON.parse(JSON.stringify(PRESET_PROFILE)), events: defaultEvents(), days: {}, sessions: [], syllabus: defaultSyllabus(), quiz: { mistakes: {} }, timer: null, prefs: { focus: 25, brk: 5 }, updated: 0 };
+  }
+  // A brand-new person: no profile yet (the app asks first), an empty plan until they import one.
   function defaultState() {
-    return { v: 1, events: defaultEvents(), days: {}, sessions: [], syllabus: defaultSyllabus(), quiz: { mistakes: {} }, timer: null, prefs: { focus: 25, brk: 5 }, updated: 0 };
+    return { v: 1, profile: null, plan: { rev: 1, name: '', days: {} }, events: defaultEvents(), days: {}, sessions: [], syllabus: blankSyllabus(), quiz: { mistakes: {} }, timer: null, prefs: { focus: 25, brk: 5 }, updated: 0 };
+  }
+  // After first-time setup: keep only exam events that fit the stream and extra subject.
+  function eventsForStream(events, stream, extra) {
+    const subs = STREAMS[stream] || STREAMS.PCM;
+    return events.filter(e => {
+      const n = e.name.toLowerCase();
+      if (/maths/.test(n)) return subs.includes('Maths');
+      if (/\bpe\b|physical education/.test(n)) return extra === 'Physical Education';
+      return true;
+    });
+  }
+
+  /* ---------- Plans made for someone (plan codes) ---------- */
+  const isDate = s => typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s);
+  function checkPlan(p) {
+    if (!p || typeof p !== 'object' || !p.days || typeof p.days !== 'object') return 'This plan code has no days in it.';
+    for (const [d, list] of Object.entries(p.days)) {
+      if (!isDate(d)) return 'A day in this plan has a bad date: ' + d;
+      if (!Array.isArray(list) || list.length > 40 || list.some(t => typeof t !== 'string' || !t.replace(/^!/, '').trim() || t.length > 160)) return 'The tasks for ' + d + ' look wrong.';
+    }
+    if (p.events && (!Array.isArray(p.events) || p.events.some(e => !e || typeof e.name !== 'string' || !e.name.trim() || !isDate(e.date)))) return 'An exam date in this plan looks wrong.';
+    if (p.goal && (typeof p.goal.name !== 'string' || (p.goal.date && !isDate(p.goal.date)))) return 'The goal exam in this plan looks wrong.';
+    return null;
+  }
+  const b64enc = s => (typeof btoa === 'function' ? btoa(unescape(encodeURIComponent(s))) : Buffer.from(s, 'utf8').toString('base64'));
+  const b64dec = s => (typeof atob === 'function' ? decodeURIComponent(escape(atob(s))) : Buffer.from(s, 'base64').toString('utf8'));
+  function makePlanCode(p) { const err = checkPlan(p); if (err) throw new Error(err); return 'EPP1:' + b64enc(JSON.stringify(p)); }
+  function readPlanCode(code) {
+    const raw = String(code || '').trim().replace(/\s+/g, '');
+    if (!raw.startsWith('EPP1:')) return { error: "That isn't a plan code. It starts with EPP1:" };
+    let p; try { p = JSON.parse(b64dec(raw.slice(5))); } catch (e) { return { error: "Couldn't read that code. Copy the whole thing and try again." }; }
+    const err = checkPlan(p); return err ? { error: err } : { plan: p };
+  }
+  // Swap in a new plan. Past days stay exactly as they were. From today on, plan tasks are replaced;
+  // tasks the person added themselves and carried-over tasks are kept.
+  function importPlan(state, p, today) {
+    const rev = ((planSource(state) && state.plan.rev) || 0) + 1;
+    state.plan = { rev, name: p.name || '', days: p.days, imported: today };
+    for (const ds of Object.keys(state.days)) {
+      if (ds < today) continue;
+      const kept = state.days[ds].tasks.filter(t => !/^p\d*-\d{4}-/.test(t.id));
+      state.days[ds].tasks = planFor(ds, state).concat(kept);
+    }
+    if (Array.isArray(p.events) && p.events.length) state.events = p.events.map(e => ({ id: uid(), name: e.name.trim(), date: e.date }));
+    if (p.goal && state.profile) state.profile.goal = { name: p.goal.name || '', date: p.goal.date || '' };
   }
   // For one day the app split Ch 2 into "Electrostatic Potential" and "Capacitance". Merge any such save back into Ch 2.
   function migrate(s) {
+    let changed = false;
+    // Saves from before profiles existed belong to the original user: keep the built-in plan and NSAT.
+    if (s && !('profile' in s)) { s.profile = JSON.parse(JSON.stringify(PRESET_PROFILE)); changed = true; }
+    return migrateCh2(s) || changed;
+  }
+  function migrateCh2(s) {
     const ch2 = 'physics:electrostatic-potential-and-capacitance', parts = ['physics:electrostatic-potential', 'physics:capacitance'];
     if (!s || !s.syllabus || !parts.some(id => s.syllabus[id])) return false;
     const got = parts.map(id => s.syllabus[id]).filter(Boolean), cur = s.syllabus[ch2];
@@ -154,8 +231,9 @@
   }
   function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
-  const api = { TZ, istDate, addDays, diffDays, pretty, short, dow, uid, PLAN, planFor, dayTasks, ensureDay, sortTasks, toggleTask, addTask, deleteTask,
-    hasNsatDone, streak, unfinishedBefore, carryOver, dayCounts, minutesOn, lastNDays, hm, nextEvents,
-    SYLLABUS, chapId, defaultSyllabus, chapTicks, subjectProgress, defaultEvents, defaultState, validState, migrate, qid, recordAnswer, shuffle };
+  const api = { TZ, istDate, addDays, diffDays, pretty, short, dow, uid, PLAN, planFor, planSource, dayTasks, ensureDay, sortTasks, toggleTask, addTask, deleteTask,
+    hasNsatDone, hasGoalDone, goalName, streak, unfinishedBefore, carryOver, dayCounts, minutesOn, lastNDays, hm, nextEvents,
+    SYLLABUS, STREAMS, EXTRAS, GOALS, streamSubjects, subjectGroups, chapId, defaultSyllabus, blankSyllabus, chapTicks, subjectProgress,
+    defaultEvents, defaultState, presetState, eventsForStream, validState, migrate, checkPlan, makePlanCode, readPlanCode, importPlan, qid, recordAnswer, shuffle };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.Logic = api;
 })(typeof window !== 'undefined' ? window : globalThis);

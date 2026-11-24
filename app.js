@@ -54,6 +54,10 @@
   }
   document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => show(b.dataset.tab)));
   function render() {
+    const needSetup = !state.profile;
+    $('v-setup').hidden = !needSetup; document.querySelector('.tabbar').hidden = needSetup;
+    for (const v of ['today', 'focus', 'syllabus', 'quiz', 'library']) $('v-' + v).hidden = needSetup || v !== tab;
+    if (needSetup) { renderSetup(); renderOverlay(); return; }
     if (tab === 'today') renderToday(); else if (tab === 'focus') renderFocus(); else if (tab === 'syllabus') renderSyllabus(); else if (tab === 'library') renderLibrary(); else renderQuiz();
     renderOverlay();
   }
@@ -93,7 +97,9 @@
     // Streak and yesterday
     const st = L.streak(state, today), y = L.addDays(today, -1), yc = L.dayCounts(state, y), ym = L.minutesOn(state, y);
     v.append(h('div', { class: 'stats' },
-      h('div', { class: 'stat dark' }, h('span', { html: SVG.flame }), h('div', null, h('div', { class: 'big poster' }, st + (st === 1 ? ' DAY' : ' DAYS')), h('div', { class: 'mono' }, 'NSAT streak'))),
+      L.goalName(state)
+        ? h('div', { class: 'stat dark' }, h('span', { html: SVG.flame }), h('div', null, h('div', { class: 'big poster' }, st + (st === 1 ? ' DAY' : ' DAYS')), h('div', { class: 'mono' }, L.goalName(state) + ' streak')))
+        : h('button', { class: 'stat dark', style: 'text-align:left', onclick: openSettings }, h('span', { html: SVG.flame }), h('div', null, h('div', { class: 'big poster', style: 'font-size:18px' }, 'NO GOAL EXAM'), h('div', { class: 'mono' }, 'Set one in settings'))),
       h('div', { class: 'stat' }, h('div', { class: 'big poster' }, yc.done + '/' + yc.total + ' · ' + L.hm(ym).replace(' min', 'm').replace(' h ', 'h ')), h('div', { class: 'mono' }, 'Yesterday'))));
 
     // Tasks
@@ -114,6 +120,11 @@
       v.append(form);
     }
     const list = h('div', { class: 'tasks' });
+    const p = L.planSource(state);
+    if (isToday && p && !Object.keys(p.days).length) v.append(h('div', { class: 'lockcard' },
+      h('div', { class: 'poster', style: 'font-size:24px' }, 'GET YOUR PERSONAL PLAN'),
+      h('div', null, 'Fill a short form about your exams, time and chapters, and send it. You get back a plan code that fills this page day by day.'),
+      h('div', { class: 'row2' }, h('button', { class: 'btn primary', onclick: openRequest }, 'Request a plan'), h('button', { class: 'btn', onclick: openImportPlan }, 'I have a code'))));
     if (!tasks.length) list.append(h('div', { class: 'empty' }, isToday ? 'Nothing planned. Add a task with + ADD.' : 'No tasks on this day.'));
     for (const t of tasks) list.append(taskCard(t));
     v.append(list);
@@ -289,7 +300,7 @@
   function renderSyllabus() {
     const v = $('v-syllabus'); v.replaceChildren();
     v.append(h('div', { class: 'head' }, h('div', null, h('div', { class: 'mono' }, 'Syllabus'), h('div', { class: 'date-big poster' }, 'Chapters'))));
-    for (const g of L.SYLLABUS) {
+    for (const g of L.subjectGroups(state)) {
       const pct = Math.round(L.subjectProgress(state, g) * 100);
       const card = h('div', { class: 'subject' },
         h('div', { class: 'subj-head' }, h('span', { class: 'poster' }, g.subject), h('span', { class: 'mono', style: 'font-size:13px' }, pct + '% done')),
@@ -473,7 +484,8 @@
       return;
     }
     const files = (lib.manifest.files || []);
-    v.append(h('div', { class: 'seg', role: 'group', 'aria-label': 'Subject' }, ['Physics', 'Chemistry', 'Maths'].map(s => h('button', { 'aria-pressed': String(lib.subject === s), onclick: () => { lib.subject = s; render(); } }, s.toUpperCase()))));
+    const subs = L.streamSubjects(state); if (!subs.includes(lib.subject)) lib.subject = subs[0];
+    v.append(h('div', { class: 'seg', role: 'group', 'aria-label': 'Subject', style: 'grid-template-columns:repeat(' + subs.length + ',1fr)' }, subs.map(s => h('button', { 'aria-pressed': String(lib.subject === s), onclick: () => { lib.subject = s; render(); } }, (subs.length > 3 && s === 'Chemistry' ? 'CHEM' : s.toUpperCase())))));
     const saved = files.filter(f => lib.have[f.id] === f.iv).length;
     if (lib.sync) v.append(h('div', { class: 'libnote' }, 'Saving ' + lib.sync.done + ' of ' + lib.sync.total + '…', h('span', { class: 'meter' }, h('div', { style: 'width:' + Math.round(lib.sync.done / lib.sync.total * 100) + '%' }))));
     else v.append(h('div', { class: 'libnote' }, files.length ? (saved === files.length ? '✓ ' + (files.length === 1 ? '1 file' : 'All ' + files.length + ' files') + ' saved on this phone' : saved + ' of ' + files.length + ' saved · open online to finish') : 'No files added yet. They will appear here.'));
@@ -529,8 +541,17 @@
       if (!importArmed) { fileIn.click(); return; }
       const data = importArmed; closeSheet(); commit(s => { Object.keys(s).forEach(k => delete s[k]); Object.assign(s, data); }); toast('Backup restored');
     } }, 'Import backup');
+    const pr = state.profile || {}, p = L.planSource(state);
+    const planLabel = !p ? 'Built-in plan' : Object.keys(p.days).length ? 'Plan ' + (p.name ? 'for ' + p.name : 'imported') + (p.imported ? ' · ' + L.short(p.imported) : '') : 'No plan yet';
     sheet(h('h2', null, 'Settings'),
-      h('div', { class: 'mono' }, 'Exams and practicals'), list,
+      h('div', { class: 'mono' }, 'You'),
+      h('div', { class: 'qcard', style: 'gap:6px' },
+        h('div', { style: 'font-size:20px' }, (pr.name || 'Student') + ' · ' + (pr.stream || 'PCM') + (pr.extra ? ' + ' + pr.extra : '')),
+        h('div', { style: 'color:var(--mut)' }, 'Goal exam: ' + ((pr.goal && pr.goal.name) || 'none') + (pr.goal && pr.goal.date ? ' · ' + L.short(pr.goal.date) : '')),
+        h('button', { class: 'btn', onclick: () => { closeSheet(); openProfile(); } }, 'Edit stream and goal')),
+      h('div', { class: 'mono', style: 'margin-top:8px' }, 'Your plan · ' + planLabel),
+      h('div', { class: 'row2' }, h('button', { class: 'btn primary', onclick: () => { closeSheet(); openRequest(); } }, 'Request a plan'), h('button', { class: 'btn', onclick: () => { closeSheet(); openImportPlan(); } }, 'Import plan code')),
+      h('div', { class: 'mono', style: 'margin-top:8px' }, 'Exams and practicals'), list,
       h('button', { class: 'addbtn', onclick: () => { draft.push({ id: L.uid(), name: '', date: L.istDate() }); drawEvents(); } }, '+ ADD EVENT'),
       err,
       h('button', { class: 'btn primary', onclick: () => {
@@ -546,6 +567,157 @@
         } }, 'Export backup'), importBtn), fileIn,
       h('div', { class: 'mono', style: 'margin-top:8px' }, 'Danger zone'), resetBtn,
       h('button', { class: 'btn', onclick: closeSheet }, 'Close'));
+  }
+
+  /* ================= PROFILE, SETUP, PLAN REQUESTS ================= */
+  function copyText(text, label) {
+    const fallback = () => { const ta = h('textarea', { readonly: true, style: 'position:fixed;top:0;left:0;opacity:0' }); ta.value = text; document.body.append(ta); ta.select(); let ok = false; try { ok = document.execCommand('copy'); } catch (e) {} ta.remove(); toast(ok ? label + ' copied' : 'Copy blocked. Select the text and copy it by hand.'); };
+    try { navigator.clipboard.writeText(text).then(() => toast(label + ' copied'), fallback); } catch (e) { fallback(); }
+  }
+  const chips = (opts, cur, onPick, labelOf) => h('div', { class: 'presets' }, opts.map(o => h('button', { type: 'button', class: 'chip', 'aria-pressed': String(o === cur), onclick: () => onPick(o) }, labelOf ? labelOf(o) : o)));
+  // Shared by first-time setup and "Edit stream and goal".
+  function profileForm(initial, saveLabel, onSave) {
+    const d = JSON.parse(JSON.stringify(initial || { name: '', stream: 'PCM', extra: '', goal: { name: '', date: '' } }));
+    d.goal = d.goal || { name: '', date: '' };
+    const wrap = h('div', { style: 'display:flex;flex-direction:column;gap:12px' }), err = h('div', { class: 'err', role: 'alert' });
+    const draw = () => {
+      const otherGoal = d.goal.name && !L.GOALS.includes(d.goal.name);
+      const otherExtra = d.extra && !L.EXTRAS.includes(d.extra);
+      wrap.replaceChildren(
+        h('label', null, h('div', { class: 'mono', style: 'margin-bottom:6px' }, 'Your name'), h('input', { value: d.name || '', maxlength: '40', placeholder: 'Riya', autocomplete: 'given-name', oninput: e => { d.name = e.target.value; } })),
+        h('div', null, h('div', { class: 'mono', style: 'margin-bottom:6px' }, 'Stream'), chips(['PCM', 'PCB', 'PCMB'], d.stream, o => { d.stream = o; draw(); })),
+        h('div', null, h('div', { class: 'mono', style: 'margin-bottom:6px' }, 'Other subject (English is always included)'),
+          chips(['None', ...L.EXTRAS, 'Other'], !d.extra ? 'None' : otherExtra || d.extra === '__other' ? 'Other' : d.extra, o => { d.extra = o === 'None' ? '' : o === 'Other' ? '__other' : o; draw(); }),
+          (otherExtra || d.extra === '__other') ? h('input', { style: 'margin-top:6px', placeholder: 'Subject name', value: d.extra === '__other' ? '' : d.extra, maxlength: '40', oninput: e => { d.extra = e.target.value || '__other'; } }) : null),
+        h('div', null, h('div', { class: 'mono', style: 'margin-bottom:6px' }, 'Goal exam (for your daily streak)'),
+          chips(['None', ...L.GOALS, 'Other'], !d.goal.name ? 'None' : otherGoal || d.goal.name === '__other' ? 'Other' : d.goal.name, o => { d.goal.name = o === 'None' ? '' : o === 'Other' ? '__other' : o; draw(); }),
+          (otherGoal || d.goal.name === '__other') ? h('input', { style: 'margin-top:6px', placeholder: 'Exam name', value: d.goal.name === '__other' ? '' : d.goal.name, maxlength: '30', oninput: e => { d.goal.name = e.target.value || '__other'; } }) : null,
+          d.goal.name ? h('label', null, h('div', { class: 'mono', style: 'margin:8px 0 4px' }, 'Goal exam date (if you know it)'), h('input', { type: 'date', value: d.goal.date || '', onchange: e => { d.goal.date = e.target.value; } })) : null),
+        err,
+        h('button', { class: 'btn primary', onclick: () => {
+          d.name = (d.name || '').trim();
+          if (d.extra === '__other') { err.textContent = 'Type your other subject, or pick None.'; return; }
+          if (d.goal.name === '__other') { err.textContent = 'Type your goal exam, or pick None.'; return; }
+          d.extra = (d.extra || '').trim(); d.goal.name = (d.goal.name || '').trim(); if (!d.goal.name) d.goal.date = '';
+          onSave(d);
+        } }, saveLabel));
+    };
+    draw(); return wrap;
+  }
+  function renderSetup() {
+    const v = $('v-setup'); if (v.dataset.drawn) return; v.dataset.drawn = '1'; v.replaceChildren();
+    const restore = h('input', { type: 'file', accept: 'application/json,.json', style: 'display:none', onchange: async ev => {
+      const f = ev.target.files && ev.target.files[0]; if (!f) return;
+      try { const data = JSON.parse(await f.text()); if (!L.validState(data)) throw 0; L.migrate(data); v.dataset.drawn = ''; commit(s => { Object.keys(s).forEach(k => delete s[k]); Object.assign(s, data); }); toast('Backup restored'); }
+      catch (e) { toast("That file isn't an Exam Pass backup."); }
+    } });
+    v.append(
+      h('div', null, h('div', { class: 'mono' }, 'Welcome'), h('div', { class: 'date-big poster' }, 'Exam Pass')),
+      h('div', { style: 'font-size:20px;line-height:1.25' }, 'Your CBSE Class 12 study plan, focus timer, syllabus tracker and quizzes. First, a few things about you.'),
+      profileForm(null, 'Start →', d => {
+        v.dataset.drawn = '';
+        commit(s => { s.profile = d; s.events = L.eventsForStream(s.events, d.stream, d.extra); });
+        viewDate = L.istDate(); tab = 'today'; toast('All set. Now get your personal plan.');
+      }),
+      h('button', { class: 'btn', style: 'margin-top:4px', onclick: () => restore.click() }, 'I have a backup file'), restore);
+  }
+  function openProfile() {
+    sheet(h('h2', null, 'Stream and goal'), profileForm(state.profile, 'Save', d => {
+      closeSheet(); commit(s => { s.profile = d; }); toast('Saved');
+    }), h('button', { class: 'btn', onclick: closeSheet }, 'Cancel'));
+  }
+
+  // The plan request: a short form that turns into one message to send.
+  const EVMAP = { English: [/^english practical/i, /^english exam/i], Physics: [/^physics practical/i, /^physics exam/i], Chemistry: [/^chem(istry)? practical/i, /^chem(istry)? exam/i],
+    Maths: [/^maths practical/i, /^maths exam/i], Biology: [/^bio(logy)? practical/i, /^bio(logy)? exam/i], 'Physical Education': [/^pe practical/i, /^(physical education|pe) exam/i] };
+  function openRequest() {
+    const pr = state.profile || {}, today = L.istDate();
+    const subjects = ['English', ...L.streamSubjects(state), ...(pr.extra ? [pr.extra] : [])];
+    const evDate = re => { const e = re && state.events.find(x => re.test(x.name)); return e ? e.date : ''; };
+    const d = { exams: subjects.map(s => ({ subject: s, prac: evDate((EVMAP[s] || [])[0]), theory: evDate((EVMAP[s] || [])[1]) })),
+      hoursSchool: '4', hoursWeekend: '8', commitments: '', best: 'Night', sleep: '23:00', samples: '2', goalDaily: pr.goal && pr.goal.name ? '60' : '0', rest: 'Half Sunday', notes: '' };
+    const syl = JSON.parse(JSON.stringify(state.syllabus));
+    const err = h('div', { class: 'err', role: 'alert' }), out = h('textarea', { class: 'ta', readonly: true, rows: '8', style: 'font-family:var(--mono);font-size:12px' });
+    const outWrap = h('div', { hidden: true, style: 'display:flex;flex-direction:column;gap:8px' });
+    const sec = (title, ...kids) => h('div', { class: 'qcard', style: 'gap:10px' }, h('div', { class: 'poster', style: 'font-size:22px' }, title), ...kids);
+    const field = (label, el) => h('label', null, h('div', { class: 'mono', style: 'margin-bottom:4px' }, label), el);
+    const chipField = (label, opts, key) => { const box = h('div'); const drawC = () => box.replaceChildren(h('div', { class: 'mono', style: 'margin-bottom:4px' }, label), chips(opts, d[key], o => { d[key] = o; drawC(); })); drawC(); return box; };
+    const examRows = d.exams.map(x => h('div', { style: 'display:grid;grid-template-columns:1fr 1fr;gap:6px;align-items:end' },
+      h('div', { style: 'grid-column:span 2;font-size:19px' }, x.subject),
+      field('Practical', h('input', { type: 'date', value: x.prac, onchange: e => { x.prac = e.target.value; } })),
+      field('Theory exam', h('input', { type: 'date', value: x.theory, onchange: e => { x.theory = e.target.value; } }))));
+    const chapBlocks = L.subjectGroups(state).map(g => h('div', null, h('div', { style: 'font-size:19px;margin:4px 0' }, g.subject),
+      g.chapters.map((name, i) => {
+        const id = L.chapId(g.subject, name), e = syl[id] || (syl[id] = { l: false, n: false, r: false, note: '' }), row = h('div', { class: 'chap' });
+        const drawR = () => row.replaceChildren(
+          h('div', { class: 'nm', style: 'font-size:16px' }, h('span', null, h('span', { class: 'cn' }, 'CH ' + (i + 1)), name)),
+          ...['l', 'n', 'r'].map((k, j) => h('button', { type: 'button', class: 'tick', style: 'width:34px;height:34px', 'aria-pressed': String(!!e[k]), 'aria-label': name + ': ' + ['Learned', 'NCERT done', 'Revised'][j], onclick: () => { e[k] = !e[k]; drawR(); } }, e[k] ? '✓' : '')),
+          h('button', { type: 'button', class: 'tick', style: 'width:34px;height:34px;' + (e.weak ? 'background:var(--pop);border-color:var(--ink);color:var(--ink)' : 'color:var(--mut)'), 'aria-pressed': String(!!e.weak), 'aria-label': name + ': weak chapter', onclick: () => { e.weak = !e.weak; drawR(); } }, '★'));
+        drawR(); return row;
+      })));
+    const build = () => {
+      const lines = ['EXAM PASS · PLAN REQUEST', 'Sent: ' + today,
+        'Name: ' + (pr.name || '-') + ' | Stream: ' + (pr.stream || 'PCM') + ' + English' + (pr.extra ? ' + ' + pr.extra : ''),
+        'Goal exam: ' + ((pr.goal && pr.goal.name) || 'none') + (pr.goal && pr.goal.date ? ' on ' + pr.goal.date : ''), '', 'EXAMS'];
+      d.exams.forEach(x => lines.push('- ' + x.subject + ': practical ' + (x.prac || '?') + ', theory ' + (x.theory || '?')));
+      lines.push('', 'TIME', 'Study hours: school days ' + d.hoursSchool + ' h, weekends/holidays ' + d.hoursWeekend + ' h',
+        'Fixed timings: ' + (d.commitments.trim() || '-'), 'Best time: ' + d.best + ' | Sleep: ' + (d.sleep || '-'), '',
+        'CHAPTERS (L learned, N NCERT done, R revised, * weak, - not started)');
+      L.subjectGroups(state).forEach(g => lines.push(g.subject + ': ' + g.chapters.map((c, i) => { const e = syl[L.chapId(g.subject, c)] || {}; const t = (e.l ? 'L' : '') + (e.n ? 'N' : '') + (e.r ? 'R' : ''); return (i + 1) + (t || '-') + (e.weak ? '*' : ''); }).join(' ')));
+      lines.push('', 'PREFERENCES', 'Sample papers per subject: ' + d.samples + ' | Goal exam daily: ' + (d.goalDaily === '0' ? 'none' : d.goalDaily + ' min') + ' | Rest: ' + d.rest,
+        'Notes: ' + (d.notes.trim() || '-'));
+      return lines.join('\n');
+    };
+    sheet(h('h2', null, 'Request a plan'),
+      h('div', null, 'Fill this in, then send the message it makes. You get back a plan code to paste into Import plan code.'),
+      sec('1 · You', h('div', null, (pr.name || 'Student') + ' · ' + (pr.stream || 'PCM') + ' + English' + (pr.extra ? ' + ' + pr.extra : '') + ' · goal: ' + ((pr.goal && pr.goal.name) || 'none')),
+        h('button', { class: 'btn', type: 'button', onclick: () => { closeSheet(); openProfile(); } }, 'Change stream or goal first')),
+      sec('2 · Exam dates', h('div', { style: 'color:var(--mut)' }, "Leave a date empty if you don't know it yet."), ...examRows),
+      sec('3 · Your time',
+        h('div', { class: 'row2' }, field('Hours on school days', h('input', { type: 'number', inputmode: 'decimal', min: '0', max: '16', step: '0.5', value: d.hoursSchool, oninput: e => { d.hoursSchool = e.target.value; } })),
+          field('Hours on weekends', h('input', { type: 'number', inputmode: 'decimal', min: '0', max: '16', step: '0.5', value: d.hoursWeekend, oninput: e => { d.hoursWeekend = e.target.value; } }))),
+        field('School, tuition and other fixed timings', h('textarea', { rows: '2', maxlength: '300', placeholder: 'School 7:30 to 2, tuition Mon Wed Fri 5 to 7', oninput: e => { d.commitments = e.target.value; } })),
+        chipField('When you study best', ['Morning', 'Afternoon', 'Night'], 'best'),
+        field('Usual sleep time', h('input', { type: 'time', value: d.sleep, onchange: e => { d.sleep = e.target.value; } }))),
+      sec('4 · Where you are', h('div', { class: 'legend', style: 'justify-content:space-between' }, h('span', { style: 'width:auto' }, 'Tap: Learn · NCERT · Revise · ★ weak')), ...chapBlocks),
+      sec('5 · Preferences',
+        chipField('Sample papers per subject before each exam', ['0', '1', '2', '3'], 'samples'),
+        chipField('Daily time for your goal exam (minutes)', ['0', '30', '60', '90', '120'], 'goalDaily'),
+        chipField('Rest day', ['None', 'Half Sunday', 'Full Sunday'], 'rest'),
+        field('Anything else', h('textarea', { rows: '3', maxlength: '500', placeholder: 'Weak in organic. Want to finish Maths first. Holiday 20 to 25 Dec.', oninput: e => { d.notes = e.target.value; } }))),
+      err,
+      h('button', { class: 'btn primary', type: 'button', onclick: () => {
+        const h1 = parseFloat(d.hoursSchool), h2 = parseFloat(d.hoursWeekend);
+        if (!(h1 >= 0) || !(h2 >= 0)) { err.textContent = 'Fill in your study hours.'; return; }
+        if (!d.exams.some(x => x.theory)) { err.textContent = 'Add at least one theory exam date.'; return; }
+        err.textContent = '';
+        commit(s => { for (const [id, e] of Object.entries(syl)) s.syllabus[id] = Object.assign(s.syllabus[id] || {}, { l: !!e.l, n: !!e.n, r: !!e.r, weak: !!e.weak }); });
+        out.value = build(); outWrap.hidden = false; outWrap.scrollIntoView({ behavior: 'smooth' });
+      } }, 'Make my request'),
+      outWrap,
+      h('button', { class: 'btn', type: 'button', onclick: closeSheet }, 'Close'));
+    outWrap.append(h('div', { class: 'mono' }, 'Your request · send this message'), out,
+      h('div', { class: 'row2' },
+        h('button', { class: 'btn primary', type: 'button', onclick: () => copyText(out.value, 'Request') }, 'Copy'),
+        h('button', { class: 'btn', type: 'button', onclick: async () => { if (navigator.share) { try { await navigator.share({ text: out.value }); } catch (e) {} } else copyText(out.value, 'Request'); } }, 'Share')));
+  }
+  function openImportPlan() {
+    const ta = h('textarea', { class: 'ta', rows: '5', placeholder: 'EPP1:…', style: 'font-family:var(--mono);font-size:12px' }), err = h('div', { class: 'err', role: 'alert' }), info = h('div');
+    let ready = null;
+    const btn = h('button', { class: 'btn primary', type: 'button', onclick: () => {
+      if (ready) { const plan = ready; closeSheet(); commit(s => L.importPlan(s, plan, L.istDate())); viewDate = L.istDate(); show('today'); toast('Your plan is in'); return; }
+      const r = L.readPlanCode(ta.value); if (r.error) { err.textContent = r.error; return; }
+      const days = Object.keys(r.plan.days).sort(), tasks = days.reduce((a, k) => a + r.plan.days[k].length, 0);
+      info.replaceChildren(h('div', { class: 'qcard', style: 'gap:4px' },
+        h('div', { style: 'font-size:20px' }, 'Plan' + (r.plan.name ? ' for ' + r.plan.name : '')),
+        h('div', null, days.length + ' days · ' + tasks + ' tasks · ' + (days[0] ? L.short(days[0]) + ' to ' + L.short(days[days.length - 1]) : '')),
+        r.plan.events && r.plan.events.length ? h('div', { style: 'color:var(--mut)' }, r.plan.events.length + ' exam dates included') : null,
+        h('div', { style: 'color:var(--mut)' }, 'Days before today stay as they are. Tasks you added yourself are kept.')));
+      ready = r.plan; btn.textContent = 'Use this plan'; err.textContent = '';
+    } }, 'Check code');
+    ta.addEventListener('input', () => { ready = null; btn.textContent = 'Check code'; info.replaceChildren(); err.textContent = ''; });
+    sheet(h('h2', null, 'Import plan code'), h('div', null, 'Paste the plan code you were sent.'), ta, err, info, btn, h('button', { class: 'btn', type: 'button', onclick: closeSheet }, 'Cancel'));
+    setTimeout(() => ta.focus(), 50);
   }
 
   /* ---------- Coming back to the app ---------- */

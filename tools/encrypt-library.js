@@ -13,7 +13,7 @@ const L = require('../logic.js');
 
 const ROOT = path.join(__dirname, '..'), SRC = path.join(ROOT, 'library-source'), OUT = path.join(ROOT, 'library'), FILES = path.join(OUT, 'files');
 const MAN = path.join(OUT, 'manifest.json'), ITER = 310000, CHECK = 'exam-pass-library';
-const SUBJ = { physics: 'Physics', chemistry: 'Chemistry', maths: 'Maths', math: 'Maths' };
+const SUBJ = { physics: 'Physics', chemistry: 'Chemistry', maths: 'Maths', math: 'Maths', biology: 'Biology', bio: 'Biology' };
 const KIND = { notes: 'notes', note: 'notes', revision: 'revision', rev: 'revision', worksheet: 'worksheet', wksh: 'worksheet', ws: 'worksheet' };
 
 function ask(q) { return new Promise(res => { const rl = readline.createInterface({ input: process.stdin, output: process.stdout }); rl.question(q, a => { rl.close(); res(a.trim()); }); }); }
