@@ -4,7 +4,7 @@
 
    The JSON looks like:
    {
-     "name": "Riya",
+     "name": "Arjun",
      "goal": { "name": "NEET", "date": "2027-05-02" },          (optional)
      "events": [ { "name": "Physics exam", "date": "2026-12-07" } ],   (optional: replaces their exam list)
      "days": {

@@ -634,7 +634,7 @@
       const otherGoal = d.goal.name && !L.GOALS.includes(d.goal.name);
       const otherExtra = d.extra && !L.EXTRAS.includes(d.extra);
       wrap.replaceChildren(
-        h('label', null, h('div', { class: 'mono', style: 'margin-bottom:6px' }, 'Your name'), h('input', { value: d.name || '', maxlength: '40', placeholder: 'Riya', autocomplete: 'given-name', oninput: e => { d.name = e.target.value; } })),
+        h('label', null, h('div', { class: 'mono', style: 'margin-bottom:6px' }, 'Your name'), h('input', { value: d.name || '', maxlength: '40', placeholder: 'Arjun', autocomplete: 'given-name', oninput: e => { d.name = e.target.value; } })),
         h('div', null, h('div', { class: 'mono', style: 'margin-bottom:6px' }, 'Stream'), chips(['PCM', 'PCB', 'PCMB'], d.stream, o => { d.stream = o; draw(); })),
         h('div', null, h('div', { class: 'mono', style: 'margin-bottom:6px' }, 'Other subject (English is always included)'),
           chips(['None', ...L.EXTRAS, 'Other'], !d.extra ? 'None' : otherExtra || d.extra === '__other' ? 'Other' : d.extra, o => { d.extra = o === 'None' ? '' : o === 'Other' ? '__other' : o; draw(); }),

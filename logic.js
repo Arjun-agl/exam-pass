@@ -150,7 +150,7 @@
     ].map(([name, date]) => ({ id: uid(), name, date }));
   }
   // The original user's setup: built-in plan (no `plan` field), PCM, NSAT goal, pre-ticked syllabus.
-  const PRESET_PROFILE = { name: '', stream: 'PCM', extra: 'Physical Education', goal: { name: 'NSAT', date: '2027-01-07' } };
+  const PRESET_PROFILE = { name: 'Arjun', stream: 'PCM', extra: 'Physical Education', goal: { name: 'NSAT', date: '2027-01-07' } };
   function presetState() {
     return { v: 1, profile: JSON.parse(JSON.stringify(PRESET_PROFILE)), events: defaultEvents(), days: {}, sessions: [], syllabus: defaultSyllabus(), quiz: { mistakes: {} }, timer: null, prefs: { focus: 25, brk: 5 }, updated: 0 };
   }
@@ -222,6 +222,8 @@
     let changed = false;
     // Saves from before profiles existed belong to the original user: keep the built-in plan and NSAT.
     if (s && !('profile' in s)) { s.profile = JSON.parse(JSON.stringify(PRESET_PROFILE)); changed = true; }
+    // The original user's profile was saved with a blank name for a while: fill it in.
+    if (s && s.profile && !s.profile.name && !s.plan) { s.profile.name = PRESET_PROFILE.name; changed = true; }
     return migrateCh2(s) || changed;
   }
   function migrateCh2(s) {
