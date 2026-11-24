@@ -11,6 +11,306 @@
  },
  "files": [
   {
+   "id": "chemistry-01-notes",
+   "subject": "Chemistry",
+   "ch": 1,
+   "chapter": "Solutions",
+   "kind": "notes",
+   "iv": "9QU2eOnKA+2C16Gd",
+   "size": 457988,
+   "hash": "93942d61ec3dbccbdb358719429bc4174313e76e851413fa77aa0107b3aa67c9"
+  },
+  {
+   "id": "chemistry-01-revision",
+   "subject": "Chemistry",
+   "ch": 1,
+   "chapter": "Solutions",
+   "kind": "revision",
+   "iv": "q9vlzDHHLjKNPnEK",
+   "size": 162552,
+   "hash": "d1a3e6b16bdc3fd75e59adb1d4d41123761a3396de71a170b3299a750c695f95"
+  },
+  {
+   "id": "chemistry-01-worksheet",
+   "subject": "Chemistry",
+   "ch": 1,
+   "chapter": "Solutions",
+   "kind": "worksheet",
+   "iv": "ZY9EORVRqtGN86gU",
+   "size": 232483,
+   "hash": "69f8550dcc52b3269f049db81715726f7a47dca61e863ef4b0f740d7c6433943"
+  },
+  {
+   "id": "chemistry-02-notes",
+   "subject": "Chemistry",
+   "ch": 2,
+   "chapter": "Electrochemistry",
+   "kind": "notes",
+   "iv": "v5Cyllry1BDPx1rV",
+   "size": 448570,
+   "hash": "4179f30d0f76045c8afe133575baa202be7c74122796a565311b66fb8006a97c"
+  },
+  {
+   "id": "chemistry-02-revision",
+   "subject": "Chemistry",
+   "ch": 2,
+   "chapter": "Electrochemistry",
+   "kind": "revision",
+   "iv": "nBQRMG1HoYZGAEkh",
+   "size": 193129,
+   "hash": "556df3226a4b91e0b3f7ae2cc42c6db0abd95a12c544830882519c128678104f"
+  },
+  {
+   "id": "chemistry-02-worksheet",
+   "subject": "Chemistry",
+   "ch": 2,
+   "chapter": "Electrochemistry",
+   "kind": "worksheet",
+   "iv": "UqPbVtE6udtltyCF",
+   "size": 244444,
+   "hash": "91595c3ade39cdb11ebe66815e58cb6a56ab7bfc3385720b99b063a901ef4335"
+  },
+  {
+   "id": "chemistry-03-notes",
+   "subject": "Chemistry",
+   "ch": 3,
+   "chapter": "Chemical Kinetics",
+   "kind": "notes",
+   "iv": "aJ8EuCFZKzUNZx6u",
+   "size": 436749,
+   "hash": "4e6665b8e9672445bf51d4091ae4664aedfd27d0a28a474063c2b5c14f1f7e43"
+  },
+  {
+   "id": "chemistry-03-revision",
+   "subject": "Chemistry",
+   "ch": 3,
+   "chapter": "Chemical Kinetics",
+   "kind": "revision",
+   "iv": "Q7Js9BuiJhLURG8B",
+   "size": 177227,
+   "hash": "d74aa53d1aff12f6343b476e0159ba44d350da421a18f9ee6850483e336ad7a3"
+  },
+  {
+   "id": "chemistry-03-worksheet",
+   "subject": "Chemistry",
+   "ch": 3,
+   "chapter": "Chemical Kinetics",
+   "kind": "worksheet",
+   "iv": "jv4210YwEirL4xgw",
+   "size": 224309,
+   "hash": "dfc025ad30683edb4739ca6e74493d8f85dab8763b67f67817a3731db2da1514"
+  },
+  {
+   "id": "chemistry-04-notes",
+   "subject": "Chemistry",
+   "ch": 4,
+   "chapter": "d and f Block",
+   "kind": "notes",
+   "iv": "6H9+9TTihHexiyXN",
+   "size": 753562,
+   "hash": "d013a5dbd552d7449879dab7fbf99ef7539147187c00d42a1045b836d8ca1a53"
+  },
+  {
+   "id": "chemistry-04-revision",
+   "subject": "Chemistry",
+   "ch": 4,
+   "chapter": "d and f Block",
+   "kind": "revision",
+   "iv": "5c0Sx/RKKTQAMupk",
+   "size": 194014,
+   "hash": "526dfd5b33b38d8100e52aad4d587ad9d363c1ed06e719f61637f80a64eb92fb"
+  },
+  {
+   "id": "chemistry-04-worksheet",
+   "subject": "Chemistry",
+   "ch": 4,
+   "chapter": "d and f Block",
+   "kind": "worksheet",
+   "iv": "5sn/9y1s5+JXjm3x",
+   "size": 205439,
+   "hash": "6b5a2ee319d6b99ebc4ccce537a4e0ec4be6975619be7de17dbe5151a6f8527c"
+  },
+  {
+   "id": "chemistry-05-notes",
+   "subject": "Chemistry",
+   "ch": 5,
+   "chapter": "Coordination Compounds",
+   "kind": "notes",
+   "iv": "rLCokbnybY64LC5N",
+   "size": 1164736,
+   "hash": "a1f0e5c92d2122a6c3c27e2781bd40f21c18038c273e4a25fb7745618cfa1e3e"
+  },
+  {
+   "id": "chemistry-05-revision",
+   "subject": "Chemistry",
+   "ch": 5,
+   "chapter": "Coordination Compounds",
+   "kind": "revision",
+   "iv": "bEd/+Lu9MIs9qCCm",
+   "size": 195193,
+   "hash": "85319ad1ea8ebc70b9a689dfdeaffb5d7b47d44f1412074994e1e6e48e15577b"
+  },
+  {
+   "id": "chemistry-05-worksheet",
+   "subject": "Chemistry",
+   "ch": 5,
+   "chapter": "Coordination Compounds",
+   "kind": "worksheet",
+   "iv": "W9S7CqX0TYVF5U3q",
+   "size": 219078,
+   "hash": "a9e6229dba77989eaa2882ff826fb30ac098b4fb96bf48822fd1d444bab148c7"
+  },
+  {
+   "id": "chemistry-06-notes",
+   "subject": "Chemistry",
+   "ch": 6,
+   "chapter": "Haloalkanes and Haloarenes",
+   "kind": "notes",
+   "iv": "+/B4SAO9zsuA+vnQ",
+   "size": 633760,
+   "hash": "997cead1208de7bff695b42a1535d184311ede4ef0d6f9530140bd338edea512"
+  },
+  {
+   "id": "chemistry-06-revision",
+   "subject": "Chemistry",
+   "ch": 6,
+   "chapter": "Haloalkanes and Haloarenes",
+   "kind": "revision",
+   "iv": "fwR74pyDEksBNEL+",
+   "size": 206620,
+   "hash": "706e3593718656725b00a8076c7190be1a0bea865d24d14601a4a68dccf0d1ae"
+  },
+  {
+   "id": "chemistry-06-worksheet",
+   "subject": "Chemistry",
+   "ch": 6,
+   "chapter": "Haloalkanes and Haloarenes",
+   "kind": "worksheet",
+   "iv": "nw8zb/8YEkrwpH+j",
+   "size": 199482,
+   "hash": "e0874f89edfa4636a5e3156457886287e7e6cb4bebc41b4d06329652f285ef2f"
+  },
+  {
+   "id": "chemistry-07-notes",
+   "subject": "Chemistry",
+   "ch": 7,
+   "chapter": "Alcohols, Phenols and Ethers",
+   "kind": "notes",
+   "iv": "cOVN7AQHf7JL09lp",
+   "size": 576973,
+   "hash": "6287af274e22721014b489ebb13ddffe64e911cef98f3877d7b1434a4a681c51"
+  },
+  {
+   "id": "chemistry-07-revision",
+   "subject": "Chemistry",
+   "ch": 7,
+   "chapter": "Alcohols, Phenols and Ethers",
+   "kind": "revision",
+   "iv": "08ODEz5ZXImiTUYQ",
+   "size": 195168,
+   "hash": "6ed00e75ad472725b55dc29086ddb84d2f687ec141db74c5c15596455ce5c294"
+  },
+  {
+   "id": "chemistry-07-worksheet",
+   "subject": "Chemistry",
+   "ch": 7,
+   "chapter": "Alcohols, Phenols and Ethers",
+   "kind": "worksheet",
+   "iv": "Ntc9ia3EKlCn5hXz",
+   "size": 177443,
+   "hash": "4b749acbadd620593c1524b6834ea111e3cca3c4bbd6cc339dd9d97b9f9a42c4"
+  },
+  {
+   "id": "chemistry-08-notes",
+   "subject": "Chemistry",
+   "ch": 8,
+   "chapter": "Aldehydes, Ketones and Carboxylic Acids",
+   "kind": "notes",
+   "iv": "H1SoyJvZ2ZEPWUpT",
+   "size": 593655,
+   "hash": "6d0fa927e11ffd01d3a4f7cccc03f126bb35401c9b025ff1ba2e6e8232271e40"
+  },
+  {
+   "id": "chemistry-08-revision",
+   "subject": "Chemistry",
+   "ch": 8,
+   "chapter": "Aldehydes, Ketones and Carboxylic Acids",
+   "kind": "revision",
+   "iv": "YKinkISVzTO9dVJC",
+   "size": 210350,
+   "hash": "c834469b69fd8093850d1f3eca238627da06b0d3401f48658936dfa8071411ba"
+  },
+  {
+   "id": "chemistry-08-worksheet",
+   "subject": "Chemistry",
+   "ch": 8,
+   "chapter": "Aldehydes, Ketones and Carboxylic Acids",
+   "kind": "worksheet",
+   "iv": "62ukeFTDAO7/k4FB",
+   "size": 187832,
+   "hash": "18779c82c355a1b3ad8eb4105bcec144b64e57d40c976ad1faf4361301e0f22e"
+  },
+  {
+   "id": "chemistry-09-notes",
+   "subject": "Chemistry",
+   "ch": 9,
+   "chapter": "Amines",
+   "kind": "notes",
+   "iv": "v942eO3r3UAsmHid",
+   "size": 502899,
+   "hash": "38cf52fb9c13b71c9ab294afe9b11ebb120d8e6ab1fe50c84fd8555e2a3db4f4"
+  },
+  {
+   "id": "chemistry-09-revision",
+   "subject": "Chemistry",
+   "ch": 9,
+   "chapter": "Amines",
+   "kind": "revision",
+   "iv": "QKsFQ3W8Bgn0C4jo",
+   "size": 163535,
+   "hash": "f97b896c9e980d456e6123e0b522979a72d365fcc85fc55a4b865557fccd0aad"
+  },
+  {
+   "id": "chemistry-09-worksheet",
+   "subject": "Chemistry",
+   "ch": 9,
+   "chapter": "Amines",
+   "kind": "worksheet",
+   "iv": "VjVCwIK8QHuwsMRa",
+   "size": 186948,
+   "hash": "1c30100e901c1bbe4e42cf496374cf82d2827577155a015ac0f6f5398a273c1d"
+  },
+  {
+   "id": "chemistry-10-notes",
+   "subject": "Chemistry",
+   "ch": 10,
+   "chapter": "Biomolecules",
+   "kind": "notes",
+   "iv": "g4lyspbHi7Ksfeo4",
+   "size": 838407,
+   "hash": "f437cda6a1ab5a516a5be03514d8a68533e617414f714d03ce197099c9590f37"
+  },
+  {
+   "id": "chemistry-10-revision",
+   "subject": "Chemistry",
+   "ch": 10,
+   "chapter": "Biomolecules",
+   "kind": "revision",
+   "iv": "YbVK7dRN5IB3CPbC",
+   "size": 183967,
+   "hash": "abfc3ec7049520d3783cee3f6bc495cc12a64590a1e54539a66d8ed4d0a5db11"
+  },
+  {
+   "id": "chemistry-10-worksheet",
+   "subject": "Chemistry",
+   "ch": 10,
+   "chapter": "Biomolecules",
+   "kind": "worksheet",
+   "iv": "2/tAOgYQFCI/+6+D",
+   "size": 164437,
+   "hash": "fc2007dc71a3a00e3fa21be412669f76f3d5cb098cb634eb9871f8f28b4d7ed0"
+  },
+  {
    "id": "physics-01-notes",
    "subject": "Physics",
    "ch": 1,
@@ -431,5 +731,5 @@
    "hash": "bc5f28580822c938b247ca476fe12c6b8987e42b9a17af0a6b2c0e595d6a3676"
   }
  ],
- "updated": 1795464394554
+ "updated": 1795517354257
 }
