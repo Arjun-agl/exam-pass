@@ -311,6 +311,266 @@
    "hash": "3557a872127ae95946dec3b00ff97b6891cab87e28af4d8dd6201c40b5faa508"
   },
   {
+   "id": "maths-01-revision",
+   "subject": "Maths",
+   "ch": 1,
+   "chapter": "Relations and Functions",
+   "kind": "revision",
+   "iv": "qvzHWzRaGGWNrRQc",
+   "size": 132636,
+   "hash": "ec42adfda9850cc49979578ea74d091ae3db85ab482b36562db9add34bfcb89d"
+  },
+  {
+   "id": "maths-01-worksheet",
+   "subject": "Maths",
+   "ch": 1,
+   "chapter": "Relations and Functions",
+   "kind": "worksheet",
+   "iv": "dqLhMJdEBFUTgPl8",
+   "size": 168514,
+   "hash": "aefc7ff660731de064ddaeec51251a74e8fe306c460135e47fc1b62a377c58f1"
+  },
+  {
+   "id": "maths-02-revision",
+   "subject": "Maths",
+   "ch": 2,
+   "chapter": "Inverse Trigonometric Functions",
+   "kind": "revision",
+   "iv": "bW7faMQjJoTbPFYt",
+   "size": 130833,
+   "hash": "bccc19199e931936e6450862a3753ffdad952d4924b25b25074a541e20127474"
+  },
+  {
+   "id": "maths-02-worksheet",
+   "subject": "Maths",
+   "ch": 2,
+   "chapter": "Inverse Trigonometric Functions",
+   "kind": "worksheet",
+   "iv": "DemS0VAT/c8Pi5F/",
+   "size": 177134,
+   "hash": "8660684e7942b0275bb9f032ad7a3ba6904fb5088551769bb9108c6ce5c44d2e"
+  },
+  {
+   "id": "maths-03-revision",
+   "subject": "Maths",
+   "ch": 3,
+   "chapter": "Matrices",
+   "kind": "revision",
+   "iv": "REMDLQ4PpOfe7Cxd",
+   "size": 129423,
+   "hash": "ad1df79bea894623197e8230084c7022d43e7c1ac0534e45de4a4033025ec861"
+  },
+  {
+   "id": "maths-03-worksheet",
+   "subject": "Maths",
+   "ch": 3,
+   "chapter": "Matrices",
+   "kind": "worksheet",
+   "iv": "gw2oaIL2mHDCP8K6",
+   "size": 181056,
+   "hash": "774157e36e303308265c22f763f90f472e2bc1fd23be3ac7d99b2fe3f97d32ea"
+  },
+  {
+   "id": "maths-04-revision",
+   "subject": "Maths",
+   "ch": 4,
+   "chapter": "Determinants",
+   "kind": "revision",
+   "iv": "sN2j6pz9weLYsAvV",
+   "size": 139328,
+   "hash": "91a7a1044d5bd28717460a63092101dc58c902561f7b5128a3abc5671102256a"
+  },
+  {
+   "id": "maths-04-worksheet",
+   "subject": "Maths",
+   "ch": 4,
+   "chapter": "Determinants",
+   "kind": "worksheet",
+   "iv": "0n4v464Im6gmgEMt",
+   "size": 175862,
+   "hash": "e9cf6cbc3f3f55b6bc10f730181c9d3b46a7d68b86386bef3cc876ef1da9c3fd"
+  },
+  {
+   "id": "maths-05-revision",
+   "subject": "Maths",
+   "ch": 5,
+   "chapter": "Continuity and Differentiability",
+   "kind": "revision",
+   "iv": "kUgkq1y9RMOcE+6q",
+   "size": 136052,
+   "hash": "cb14840f00964c839a2b7002dacc76b0f37c0f98f096fc4e7ffe62d53a4a7492"
+  },
+  {
+   "id": "maths-05-worksheet",
+   "subject": "Maths",
+   "ch": 5,
+   "chapter": "Continuity and Differentiability",
+   "kind": "worksheet",
+   "iv": "uHL4RL9DunNDHMqa",
+   "size": 180804,
+   "hash": "b33121801bc95fbf841892eb4c1c29806ed478be68921d368aff8e62fd587517"
+  },
+  {
+   "id": "maths-06-revision",
+   "subject": "Maths",
+   "ch": 6,
+   "chapter": "Application of Derivatives",
+   "kind": "revision",
+   "iv": "QSV6jd/gIbx9MRTr",
+   "size": 123827,
+   "hash": "7f097bc9aabeb4640d423965209f2bfdcdc7a75d5aa27301c160bf272633465e"
+  },
+  {
+   "id": "maths-06-worksheet",
+   "subject": "Maths",
+   "ch": 6,
+   "chapter": "Application of Derivatives",
+   "kind": "worksheet",
+   "iv": "pw5cRGCreZfbIy5p",
+   "size": 154592,
+   "hash": "96b18ae21b9640f6bb1f182e3b6ffebef5cb4e4e0d8aee191fdd5ef64b84731f"
+  },
+  {
+   "id": "maths-07-revision",
+   "subject": "Maths",
+   "ch": 7,
+   "chapter": "Integrals",
+   "kind": "revision",
+   "iv": "bumX71xsVMWBwJIB",
+   "size": 135962,
+   "hash": "95697b8bbec0321459323d8090688d6759f460acd31c8d974f14f4b8f73b69c3"
+  },
+  {
+   "id": "maths-07-worksheet",
+   "subject": "Maths",
+   "ch": 7,
+   "chapter": "Integrals",
+   "kind": "worksheet",
+   "iv": "B63cA/FrVMCM/5xm",
+   "size": 174050,
+   "hash": "0744a51188b206b56ce288fa0bd942698bb5571bcbca2bbd528d5c416976334c"
+  },
+  {
+   "id": "maths-08-revision",
+   "subject": "Maths",
+   "ch": 8,
+   "chapter": "Application of Integrals",
+   "kind": "revision",
+   "iv": "ONdt6hDIM57OO7ck",
+   "size": 108089,
+   "hash": "7296ac6ce54e2522e589804a86fab027c8817b88653d20e867281bcf72592cb6"
+  },
+  {
+   "id": "maths-08-worksheet",
+   "subject": "Maths",
+   "ch": 8,
+   "chapter": "Application of Integrals",
+   "kind": "worksheet",
+   "iv": "vSHf44MPIA0UrJCX",
+   "size": 174136,
+   "hash": "80f9135a3767430f4172d7d3c01a9ecbbac1dbf8698ff84f637a58ab8f87b906"
+  },
+  {
+   "id": "maths-09-revision",
+   "subject": "Maths",
+   "ch": 9,
+   "chapter": "Differential Equations",
+   "kind": "revision",
+   "iv": "aJPCkGlofpCTxXBn",
+   "size": 128675,
+   "hash": "365f2944b22e3da9b40fe83bc15a318277ecf62421554d6aa81a8a8cfd60ef75"
+  },
+  {
+   "id": "maths-09-worksheet",
+   "subject": "Maths",
+   "ch": 9,
+   "chapter": "Differential Equations",
+   "kind": "worksheet",
+   "iv": "wBGqr/gzV6HW2rw2",
+   "size": 176235,
+   "hash": "bf6fd8bfd662e2b64c78571d7e0bf10e386259c2db7b2c5eae8e9593122902d7"
+  },
+  {
+   "id": "maths-10-revision",
+   "subject": "Maths",
+   "ch": 10,
+   "chapter": "Vectors",
+   "kind": "revision",
+   "iv": "TjJeG7yQdr3D9d09",
+   "size": 108157,
+   "hash": "1f4b87627e96352391d2e004710c6063323789c86703f1bf9ced4b3a0c20da86"
+  },
+  {
+   "id": "maths-10-worksheet",
+   "subject": "Maths",
+   "ch": 10,
+   "chapter": "Vectors",
+   "kind": "worksheet",
+   "iv": "zVtv0XrUXyDZErEH",
+   "size": 179724,
+   "hash": "714a6dc254b8dbc6b98c9990853ad950e587ca6708ebde5c1caa3c6126dcc134"
+  },
+  {
+   "id": "maths-11-revision",
+   "subject": "Maths",
+   "ch": 11,
+   "chapter": "3D Geometry",
+   "kind": "revision",
+   "iv": "6HVb0Z7r6PHxC9E9",
+   "size": 113730,
+   "hash": "abec148059906c7109a636b1818327fbf707a58da29c0f61344986c7fa006d76"
+  },
+  {
+   "id": "maths-11-worksheet",
+   "subject": "Maths",
+   "ch": 11,
+   "chapter": "3D Geometry",
+   "kind": "worksheet",
+   "iv": "7Cs1KWCIhoEArnuP",
+   "size": 177686,
+   "hash": "1fa3faad3d28a1d144f6a508c00aec544cbd9515815f5bedfb43fb8e5b8e4eeb"
+  },
+  {
+   "id": "maths-12-revision",
+   "subject": "Maths",
+   "ch": 12,
+   "chapter": "Linear Programming",
+   "kind": "revision",
+   "iv": "KgegeScQjK7kILFp",
+   "size": 97261,
+   "hash": "080b0086a42e45dda05d19ea634ae5499ee981a60e326ac9b245c7c61586cc5e"
+  },
+  {
+   "id": "maths-12-worksheet",
+   "subject": "Maths",
+   "ch": 12,
+   "chapter": "Linear Programming",
+   "kind": "worksheet",
+   "iv": "hJeRcADjYMD4zfnM",
+   "size": 153003,
+   "hash": "9b97b053c19a36216911ee8880c4a000791518c40b390e7449cbfab41ab8560e"
+  },
+  {
+   "id": "maths-13-revision",
+   "subject": "Maths",
+   "ch": 13,
+   "chapter": "Probability",
+   "kind": "revision",
+   "iv": "AsPvgHXH9JG7qjNi",
+   "size": 109377,
+   "hash": "2965f7dfd7c66cf64915ba98c2b18cdc85cada0886da42c78001653b316f7af5"
+  },
+  {
+   "id": "maths-13-worksheet",
+   "subject": "Maths",
+   "ch": 13,
+   "chapter": "Probability",
+   "kind": "worksheet",
+   "iv": "tXZ7yXd5sEMH51sO",
+   "size": 159656,
+   "hash": "40b51e458d4e17c49245672a288af282ad6d9101ad40eac66d2e880c93eceeee"
+  },
+  {
    "id": "physics-01-notes",
    "subject": "Physics",
    "ch": 1,
@@ -731,5 +991,5 @@
    "hash": "6194b3fc5e44bf83c9a021f0b483d106e1d4ca1dec6a07e12e329dbc6cda0e53"
   }
  ],
- "updated": 1795523613206
+ "updated": 1795535988119
 }
